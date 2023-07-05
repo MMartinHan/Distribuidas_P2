@@ -1,7 +1,7 @@
 from tkinter import *
-from nomina import *
 from seleccion import *
 from contabilidad import *
+from funciones_ventanas import abrir_ventana, cerrar_ventana
 
 class VentanaLogin(Tk):
     def __init__(self):
@@ -22,28 +22,21 @@ class VentanaLogin(Tk):
         self.espacio_blanco = Label(self, text="")
         self.espacio_blanco.pack()
         
-        self.boton_iniciar_sesion = Button(self, text="Iniciar sesión", command=self.abrir_ventana_opciones)
+        self.boton_iniciar_sesion = Button(self, text="Iniciar sesión", command=self.login)
         self.boton_iniciar_sesion.pack()
 
-    def abrir_ventana_opciones(self):
+    def login(self):
         usuario = self.entrada_usuario.get()
         contrasena = self.entrada_contrasena.get()
-        
-        # Verificar las credenciales y realizar las acciones necesarias
-        # Tu código de verificación y acciones aquí
         if usuario == "admin" and contrasena == "admin":
             # Limpiar los campos de entrada después de iniciar sesión
             self.entrada_usuario.delete(0, 'end')
             self.entrada_contrasena.delete(0, 'end')
-            
-            # Cerrar la ventana actual
-            self.destroy()
-            
-            # Abrir la ventana de opciones
-            ventana_opciones = VentanaOpciones()
-            ventana_opciones.mainloop()
+            cerrar_ventana(self)
+            abrir_ventana(VentanaOpciones)
         else:
             self.espacio_blanco.config(text="Usuario o contraseña incorrectos")
+        
         
         
         
@@ -62,10 +55,17 @@ class VentanaOpciones(Tk):
 
         self.boton_opcion_1 = Button(self.frame_contenedor, text="SELECCION")
         self.boton_opcion_1.pack(side="left", padx=10)
-        self.boton_opcion_2 = Button(self.frame_contenedor, text="NOMINA")
+        self.boton_opcion_2 = Button(self.frame_contenedor, text="NOMINA", command=self.abrir_ventana_motivo)
         self.boton_opcion_2.pack(side="left", padx=10)
         self.boton_opcion_3 = Button(self.frame_contenedor, text="CONTABILIDAD")
         self.boton_opcion_3.pack(side="left", padx=10)
+        
+    def abrir_ventana_motivo(self):
+        cerrar_ventana(self)
+        from nomina import VentanaMotivo
+        abrir_ventana(VentanaMotivo)
+        
+        
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
 ventana = VentanaLogin()
