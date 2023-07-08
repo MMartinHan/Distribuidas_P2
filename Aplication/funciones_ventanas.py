@@ -1,5 +1,4 @@
 
-
 def abrir_ventana(ventna_cls):
     ventana = ventna_cls()
     ventana.mainloop()
