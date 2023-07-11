@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from funciones_ventanas import abrir_ventana, cerrar_ventana
 
 class VentanaLogin(tk.Tk):
@@ -51,12 +52,16 @@ class VentanaOpciones(tk.Tk):
         self.boton_opcion_1.pack(side="left", padx=10)
         self.boton_opcion_2 = tk.Button(self.frame_contenedor, text="NOMINA", command=self.abrir_ventana_motivo)
         self.boton_opcion_2.pack(side="left", padx=10)
-        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="CONTABILIDAD")
+        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="CONTABILIDAD", command=self.abrir_ventana_cuenta)
         self.boton_opcion_3.pack(side="left", padx=10)
         
     def abrir_ventana_motivo(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaNomina)
+    
+    def abrir_ventana_cuenta(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaCuenta)
         
 class VentanaNomina(tk.Tk):
     def __init__(self):
@@ -72,12 +77,6 @@ class VentanaNomina(tk.Tk):
 
         self.boton_opcion_1 = tk.Button(self.frame_contenedor, text="Ingresar motivo", command=self.agregar)
         self.boton_opcion_1.pack(side="left", padx=10)
-        self.boton_opcion_2 = tk.Button(self.frame_contenedor, text="Modificar motivo")
-        self.boton_opcion_2.pack(side="left", padx=10)
-        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Eliminar motivo")
-        self.boton_opcion_3.pack(side="left", padx=10)
-        self.boton_opcion_4 = tk.Button(self.frame_contenedor, text="Consultar motivo")
-        self.boton_opcion_4.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Empleado")
         self.etiqueta_opciones.pack()
@@ -85,14 +84,8 @@ class VentanaNomina(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=20)
 
-        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Ingresar empleado")
+        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Ingresar empleado", command=self.agregarEmpleado)
         self.boton_opcion_5.pack(side="left", padx=10)
-        self.boton_opcion_6 = tk.Button(self.frame_contenedor, text="Modificar empleado")
-        self.boton_opcion_6.pack(side="left", padx=10)
-        self.boton_opcion_7 = tk.Button(self.frame_contenedor, text="Eliminar empleado")
-        self.boton_opcion_7.pack(side="left", padx=10)
-        self.boton_opcion_7 = tk.Button(self.frame_contenedor, text="Consultar empleado")
-        self.boton_opcion_7.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Nomina")
         self.etiqueta_opciones.pack()
@@ -130,112 +123,544 @@ class VentanaNomina(tk.Tk):
     def agregar(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaAgregarMotivo)
+
+    def agregarEmpleado(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAgregarEmpleado)
         
 class VentanaAgregarMotivo(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.motivos = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_nombre_motivo = tk.Label(self.master, text="Nombre del motivo:")
+        self.label_nombre_motivo.pack()
+        self.entry_nombre_motivo = tk.Entry(self.master)
+        self.entry_nombre_motivo.pack()
+
+        self.btn_guardar_motivo = tk.Button(self.master, text="Guardar", command=self.guardar_motivo)
+        self.btn_guardar_motivo.pack()
+
+        self.label_motivos_guardados = tk.Label(self.master, text="Motivos Guardadss:")
+        self.label_motivos_guardados.pack()
+
+        self.listbox_motivos = tk.Listbox(self.master)
+        self.listbox_motivos.pack()
+
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_motivo)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_motivo)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_motivos.bind("<<ListboxSelect>>", self.actualizar_botones)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+    
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaNomina)
+
+    def guardar_motivo(self):
+        nombre_motivo = self.entry_nombre_motivo.get()
+
+        if nombre_motivo:
+            self.motivos.append(nombre_motivo)
+            self.listbox_motivos.insert(tk.END, nombre_motivo)
+            self.entry_nombre_motivo.delete(0, tk.END)
+            messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
+
+    def modificar_motivo(self):
+        seleccion = self.listbox_motivos.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            nombre_motivo_actual = self.listbox_motivos.get(indice)
+            nombre_motivo_modificado = self.entry_nombre_motivo.get()
+
+            if nombre_motivo_modificado:
+                self.motivos[indice] = nombre_motivo_modificado
+                self.listbox_motivos.delete(indice)
+                self.listbox_motivos.insert(indice, nombre_motivo_modificado)
+                self.entry_nombre_motivo.delete(0, tk.END)
+                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
+
+    def eliminar_motivo(self):
+        seleccion = self.listbox_motivos.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            nombre_motivo = self.listbox_motivos.get(indice)
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar la cuenta '{nombre_motivo}'?")
+
+            if confirmacion:
+                self.motivos.pop(indice)
+                self.listbox_motivos.delete(indice)
+                messagebox.showinfo("Información", "Cuenta eliminada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
+
+    def actualizar_botones(self, event):
+        seleccion = self.listbox_motivos.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED) 
+
+class VentanaAgregarEmpleado(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.empleados = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_cedula = tk.Label(self.master, text="Cédula:")
+        self.label_cedula.pack()
+        self.entry_cedula = tk.Entry(self.master)
+        self.entry_cedula.pack()
+
+        self.label_nombre = tk.Label(self.master, text="Nombre:")
+        self.label_nombre.pack()
+        self.entry_nombre = tk.Entry(self.master)
+        self.entry_nombre.pack()
+
+        self.label_fecha = tk.Label(self.master, text="Fecha de ingreso:")
+        self.label_fecha.pack()
+        self.entry_fecha = tk.Entry(self.master)
+        self.entry_fecha.pack()
+
+        self.label_sueldo = tk.Label(self.master, text="Sueldo:")
+        self.label_sueldo.pack()
+        self.entry_sueldo = tk.Entry(self.master)
+        self.entry_sueldo.pack()
+
+        self.btn_guardar = tk.Button(self.master, text="Guardar", command=self.guardar_empleado)
+        self.btn_guardar.pack()
+
+        self.label_empleados_guardados = tk.Label(self.master, text="Empleados Guardados:")
+        self.label_empleados_guardados.pack()
+
+        self.listbox_empleados = tk.Listbox(self.master)
+        self.listbox_empleados.pack()
+
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_empleado)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_empleado)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_empleados.bind("<<ListboxSelect>>", self.llenar_campos)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+
+    def mover_inicio(self):
+        self.destroy()
+        abrir_ventana(VentanaNomina)
+
+    def guardar_empleado(self):
+        cedula = self.entry_cedula.get()
+        nombre = self.entry_nombre.get()
+        fecha = self.entry_fecha.get()
+        sueldo = self.entry_sueldo.get()
+
+        if cedula and nombre and fecha and sueldo:
+            empleado = (cedula, nombre, fecha, sueldo)
+            self.empleados.append(empleado)
+            self.listbox_empleados.insert(tk.END, empleado)
+            self.limpiar_campos()
+            messagebox.showinfo("Información", "Empleado guardado exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+
+    def modificar_empleado(self):
+        seleccion = self.listbox_empleados.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            empleado_actual = self.listbox_empleados.get(indice)
+            empleado_modificado = self.get_campos_empleado()
+
+            if empleado_modificado:
+                self.empleados[indice] = empleado_modificado
+                self.listbox_empleados.delete(indice)
+                self.listbox_empleados.insert(indice, empleado_modificado)
+                self.limpiar_campos()
+                messagebox.showinfo("Información", "Empleado modificado exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un empleado para modificar.")
+
+    def eliminar_empleado(self):
+        seleccion = self.listbox_empleados.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            empleado = self.listbox_empleados.get(indice)
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar al empleado '{empleado}'?")
+
+            if confirmacion:
+                self.empleados.pop(indice)
+                self.listbox_empleados.delete(indice)
+                messagebox.showinfo("Información", "Empleado eliminado exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un empleado para eliminar.")    
+            
+    def llenar_campos(self, event):
+        seleccion = self.listbox_empleados.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+            indice = seleccion[0]
+            empleado = self.listbox_empleados.get(indice)
+            self.entry_cedula.delete(0, tk.END)
+            self.entry_cedula.insert(tk.END, empleado[0])
+            self.entry_nombre.delete(0, tk.END)
+            self.entry_nombre.insert(tk.END, empleado[1])
+            self.entry_fecha.delete(0, tk.END)
+            self.entry_fecha.insert(tk.END, empleado[2])
+            self.entry_sueldo.delete(0, tk.END)
+            self.entry_sueldo.insert(tk.END, empleado[3])
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+
+    def get_campos_empleado(self):
+        cedula = self.entry_cedula.get()
+        nombre = self.entry_nombre.get()
+        fecha = self.entry_fecha.get()
+        sueldo = self.entry_sueldo.get()
+
+        if cedula and nombre and fecha and sueldo:
+            return (cedula, nombre, fecha, sueldo)
+        else:
+            return None
+
+    def limpiar_campos(self):
+        self.entry_cedula.delete(0, tk.END)
+        self.entry_nombre.delete(0, tk.END)
+        self.entry_fecha.delete(0, tk.END)
+        self.entry_sueldo.delete(0, tk.END)
+
+class VentanaCuenta(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Agregar motivo")
+        self.title("Pantalla de cuenta")
         self.geometry("600x400")
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Tipo de Cuenta")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
 
-        self.etiqueta_entrada = tk.Label(self, text='Ingresar nuevo motivo: ')
-        self.etiqueta_entrada.pack()
+        self.boton_opcion_1 = tk.Button(self.frame_contenedor, text="Ingresar tipo de cuenta", command=self.ingresar_tipoCuenta)
+        self.boton_opcion_1.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Cuenta")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
+
+        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Ingresar cuenta", command=self.ingresar_cuenta)
+        self.boton_opcion_5.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Contabilidad")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
+        
+        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Ingresar asiento contable", command=self.agregarAsiento)
+        self.boton_opcion_8.pack(side="left", padx=10)
+        self.boton_opcion_9 = tk.Button(self.frame_contenedor, text="Modificar asiento contable")
+        self.boton_opcion_9.pack(side="left", padx=10)
+        self.boton_opcion_10 = tk.Button(self.frame_contenedor, text="Eliminar asiento contable")
+        self.boton_opcion_10.pack(side="left", padx=10)
+        self.boton_opcion_11 = tk.Button(self.frame_contenedor, text="Consultar asiento contable")
+        self.boton_opcion_11.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=10)
+        
+        self.boton_opcion_12 = tk.Button(self.frame_contenedor, text="Balance general")
+        self.boton_opcion_12.pack(side="left", padx=5)
+        self.boton_opcion_13 = tk.Button(self.frame_contenedor, text="Estado de resultados")
+        self.boton_opcion_13.pack(side="left", padx=5)
+        
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.boton_regresar.pack()
+        
+    def ingresar_cuenta(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaIngresarCuenta)
+
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaOpciones)
+    
+    def ingresar_tipoCuenta(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaIngresarTipoCuenta)
+
+    def agregarAsiento(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAgregarAsiento)
+
+class VentanaIngresarTipoCuenta(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.cuentas = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_nombre_cuenta = tk.Label(self.master, text="Nombre del tipo de cuenta:")
+        self.label_nombre_cuenta.pack()
+        self.entry_nombre_cuenta = tk.Entry(self.master)
+        self.entry_nombre_cuenta.pack()
+
+        self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_cuenta)
+        self.btn_guardar_cuenta.pack()
+
+        self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
+        self.label_cuentas_guardadas.pack()
+
+        self.listbox_cuentas = tk.Listbox(self.master)
+        self.listbox_cuentas.pack()
+
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_cuenta)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_cuentas.bind("<<ListboxSelect>>", self.actualizar_botones)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+    
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaCuenta)
+
+    def guardar_cuenta(self):
+        nombre_cuenta = self.entry_nombre_cuenta.get()
+
+        if nombre_cuenta:
+            self.cuentas.append(nombre_cuenta)
+            self.listbox_cuentas.insert(tk.END, nombre_cuenta)
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
+
+    def modificar_cuenta(self):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            nombre_cuenta_actual = self.listbox_cuentas.get(indice)
+            nombre_cuenta_modificado = self.entry_nombre_cuenta.get()
+
+            if nombre_cuenta_modificado:
+                self.cuentas[indice] = nombre_cuenta_modificado
+                self.listbox_cuentas.delete(indice)
+                self.listbox_cuentas.insert(indice, nombre_cuenta_modificado)
+                self.entry_nombre_cuenta.delete(0, tk.END)
+                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
+
+    def eliminar_cuenta(self):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            nombre_cuenta = self.listbox_cuentas.get(indice)
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar la cuenta '{nombre_cuenta}'?")
+
+            if confirmacion:
+                self.cuentas.pop(indice)
+                self.listbox_cuentas.delete(indice)
+                messagebox.showinfo("Información", "Cuenta eliminada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
+
+    def actualizar_botones(self, event):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+
+class VentanaIngresarCuenta(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.cuentas = []
+        self.tipos_cuenta = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_nombre_cuenta = tk.Label(self.master, text="Nombre de la Cuenta:")
+        self.label_nombre_cuenta.pack()
+        self.entry_nombre_cuenta = tk.Entry(self.master)
+        self.entry_nombre_cuenta.pack()
+
+        self.label_tipo_cuenta = tk.Label(self.master, text="Tipo de Cuenta:")
+        self.label_tipo_cuenta.pack()
+        self.combobox_tipo_cuenta = ttk.Combobox(self.master, values=self.tipos_cuenta)
+        self.combobox_tipo_cuenta.pack()
+
+        self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_cuenta)
+        self.btn_guardar_cuenta.pack()
+
+        self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
+        self.label_cuentas_guardadas.pack()
+
+        self.listbox_cuentas = tk.Listbox(self.master)
+        self.listbox_cuentas.pack()
+
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_cuenta)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_cuentas.bind("<<ListboxSelect>>", self.actualizar_botones)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_atras)
+        self.btn_regresar.pack()
+
+    def mover_atras(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaCuenta)
+
+    def guardar_cuenta(self):
+        nombre_cuenta = self.entry_nombre_cuenta.get()
+        tipo_cuenta = self.combobox_tipo_cuenta.get()
+
+        if nombre_cuenta and tipo_cuenta:
+            self.cuentas.append((nombre_cuenta, tipo_cuenta))
+            cuenta_text = f"{nombre_cuenta} - {tipo_cuenta}"
+            self.listbox_cuentas.insert(tk.END, cuenta_text)
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta y seleccione un tipo de cuenta.")
+
+    def modificar_cuenta(self):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            cuenta_actual = self.listbox_cuentas.get(indice)
+            nombre_cuenta_actual, tipo_cuenta_actual = cuenta_actual.split(" - ")
+            nombre_cuenta_modificado = self.entry_nombre_cuenta.get()
+            tipo_cuenta_modificado = self.combobox_tipo_cuenta.get()
+
+            if nombre_cuenta_modificado and tipo_cuenta_modificado:
+                cuenta_modificada = f"{nombre_cuenta_modificado} - {tipo_cuenta_modificado}"
+                self.cuentas[indice] = (nombre_cuenta_modificado, tipo_cuenta_modificado)
+                self.listbox_cuentas.delete(indice)
+                self.listbox_cuentas.insert(indice, cuenta_modificada)
+                self.entry_nombre_cuenta.delete(0, tk.END)
+                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido y seleccione un tipo de cuenta.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
+
+    def eliminar_cuenta(self):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            cuenta = self.listbox_cuentas.get(indice)
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar la cuenta '{cuenta}'?")
+
+            if confirmacion:
+                self.cuentas.pop(indice)
+                self.listbox_cuentas.delete(indice)
+                messagebox.showinfo("Información", "Cuenta eliminada exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
+
+    def actualizar_botones(self, event):
+        seleccion = self.listbox_cuentas.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+
+class VentanaAgregarAsiento(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de agregar asiento")
+        self.geometry("600x400")
+        
+        self.etiqueta_motivo = tk.Label(self, text="Motivo")
+        self.etiqueta_motivo.pack()
+        
         self.campo_motivo = tk.Entry(self)
         self.campo_motivo.pack()
         
-        # Crear estilo para la tabla
-        estilo = ttk.Style()
-        estilo.configure("Tabla.Treeview", borderwidth=1, relief="solid")
-        estilo.configure("Tabla.Treeview.Heading", background="lightgray", foreground="black", font=('Helvetica', 10, 'bold'))
-        estilo.map("Tabla.Treeview", background=[("selected", "#0078D7")])
-        estilo.map("Tabla.Treeview.Heading", background=[("active", "#0078D7")])
-
-        self.etiqueta_tabla = tk.Label(self, text=" ")
-        self.etiqueta_tabla.pack()
-        self.etiqueta_tabla = tk.Label(self, text="Registros encontrados")
-        self.etiqueta_tabla.pack()
-
-        self.tabla = ttk.Treeview(self, columns=('ID', 'Motivo'), show='headings', style="Tabla.Treeview")
-        self.tabla.heading('ID', text='ID')
-        self.tabla.heading('Motivo', text='Motivo')
-        self.tabla.column('ID', width=50)
-        self.tabla.column('Motivo', width=300)
-        self.dibujar_bordes()
-        self.tabla.pack()
-
-        self.tabla.bind('<Double-1>', self.modificar_motivo)
-
-        self.boton_agregar = tk.Button(self, text='Agregar', command=self.agregar_motivo)
-        self.boton_agregar.pack()
-
-        self.cargar_registros()  # Cargar los registros existentes
-
-    def dibujar_bordes(self):
-        # Obtener el ancho y alto de la tabla
-        tabla_width = self.tabla.winfo_width()
-        tabla_height = self.tabla.winfo_height()
-
-        # Dibujar bordes de colores para cada fila
-        for row_id in self.tabla.get_children():
-            rect = self.tabla.bbox(row_id, column="#all")
-            self.tabla.item(row_id, tags=(row_id,))
-            self.tabla.tag_configure(row_id, background="black")
-            self.tabla.place(rect, bordermode="outside", anchor="nw")
-
-        # Dibujar bordes de colores para cada columna
-        for col_id in self.tabla.get_children():
-            rect = self.tabla.bbox(col_id, column="#all")
-            self.tabla.item(col_id, tags=(col_id,))
-            self.tabla.tag_configure(col_id, background="black")
-            self.tabla.place(rect, bordermode="outside", anchor="nw")
-    
-    def cargar_registros(self):
-        # Obtener los registros de la base de datos
-        # Aquí debes agregar la lógica para obtener los registros de la base de datos
-
-        # Ejemplo de registros obtenidos de la base de datos
-        registros = [
-            {'id': 1, 'motivo': 'Motivo 1'},
-            {'id': 2, 'motivo': 'Motivo 2'},
-            {'id': 3, 'motivo': 'Motivo 3'}
-        ]
-
-        for i, registro in enumerate(registros, start=1):
-            id_registro = registro['id']
-            motivo_registro = registro['motivo']
-            self.tabla.insert('', 'end', values=(i, id_registro, motivo_registro))
-
-    def agregar_motivo(self):
-        motivo = self.campo_motivo.get()
-        self.tabla.insert('', tk.END, values=('', motivo))
-        self.campo_motivo.delete(0, 'end')
-
-    def modificar_motivo(self, event):
-        seleccion = self.tabla.focus()
-        if seleccion:
-            valores = self.tabla.item(seleccion)['values']
-            id_seleccionado = valores[1]
-            motivo_seleccionado = valores[2]
-            self.destroy()
-            ventana_modificar = VentanaModificacion()
-            ventana_modificar.mainloop()
-
-class VentanaModificacion(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Ventana de Modificación")
-
-        motivo =""
-        self.motivo_seleccionado = motivo
-
-        self.etiqueta_motivo = tk.Label(self, text=f"Motivo seleccionado: {self.motivo_seleccionado}")
-        self.etiqueta_motivo.pack()
-
-        self.boton_guardar = tk.Button(self, text="Guardar", command=self.guardar_motivo)
+        self.etiqueta_monto = tk.Label(self, text="Monto")
+        self.etiqueta_monto.pack()
+        
+        self.campo_monto = tk.Entry(self)
+        self.campo_monto.pack()
+        
+        self.etiqueta_fecha = tk.Label(self, text="Fecha")
+        self.etiqueta_fecha.pack()
+        
+        self.campo_fecha = tk.Entry(self)
+        self.campo_fecha.pack()
+        
+        self.boton_guardar = tk.Button(self, text="Guardar", command=self.guardar_asiento)
         self.boton_guardar.pack()
+        
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.boton_regresar.pack()
+        
+    def guardar_asiento(self):
+        # Lógica para guardar el asiento
+        self.campo_motivo.delete(0, 'end')
+        self.campo_monto.delete(0, 'end')
+        self.campo_fecha.delete(0, 'end')
 
-    def guardar_motivo(self):
-        # Lógica para guardar el motivo modificado
-        self.destroy()     
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaCuenta)
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
 ventana = VentanaLogin()
