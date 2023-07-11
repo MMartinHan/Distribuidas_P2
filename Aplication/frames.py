@@ -1,4 +1,5 @@
 import tkinter as tk
+import motivo_methods as mm
 from tkinter import ttk
 from tkinter import messagebox
 from funciones_ventanas import abrir_ventana, cerrar_ventana
@@ -167,7 +168,9 @@ class VentanaAgregarMotivo(tk.Tk):
 
     def guardar_motivo(self):
         nombre_motivo = self.entry_nombre_motivo.get()
-
+        id = mm.generar_id()
+        ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")|"
+        print(ingresoMotivo)
         if nombre_motivo:
             self.motivos.append(nombre_motivo)
             self.listbox_motivos.insert(tk.END, nombre_motivo)
