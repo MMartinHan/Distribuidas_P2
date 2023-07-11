@@ -27,6 +27,3 @@ def generar_id():
             nuevo = str(cambio)
             id = letras + nuevo
     return id
-
-            
-print(generar_id())
