@@ -1,5 +1,6 @@
 import tkinter as tk
-import motivo_methods as mm
+import nomina_methods as nm
+import contabilidad_methods as cm
 from tkinter import ttk
 from tkinter import messagebox
 from funciones_ventanas import abrir_ventana, cerrar_ventana
@@ -168,7 +169,7 @@ class VentanaAgregarMotivo(tk.Tk):
 
     def guardar_motivo(self):
         nombre_motivo = self.entry_nombre_motivo.get()
-        id = mm.generar_id()
+        id = nm.generar_id()
         ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")|"
         print(ingresoMotivo)
         if nombre_motivo:
@@ -280,7 +281,8 @@ class VentanaAgregarEmpleado(tk.Tk):
         nombre = self.entry_nombre.get()
         fecha = self.entry_fecha.get()
         sueldo = self.entry_sueldo.get()
-
+        ingresarEmpleado = "INGRESAR|EMPLEADO|(CODIGO_MOT, CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, FECHA_ING_EMP, SUELDO_EMP)|(" + ", " + str(cedula) + ", " + str(nombre) + ", " + str(fecha) + ", " + str(sueldo) + ")"
+        print(ingresarEmpleado)
         if cedula and nombre and fecha and sueldo:
             empleado = (cedula, nombre, fecha, sueldo)
             self.empleados.append(empleado)
@@ -443,7 +445,7 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         self.entry_nombre_cuenta = tk.Entry(self.master)
         self.entry_nombre_cuenta.pack()
 
-        self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_cuenta)
+        self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_tipo_cuenta)
         self.btn_guardar_cuenta.pack()
 
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
@@ -452,10 +454,10 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         self.listbox_cuentas = tk.Listbox(self.master)
         self.listbox_cuentas.pack()
 
-        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_tipo_cuenta)
         self.btn_modificar.pack(side=tk.LEFT)
 
-        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_cuenta)
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_tipo_cuenta)
         self.btn_eliminar.pack(side=tk.LEFT)
 
         self.listbox_cuentas.bind("<<ListboxSelect>>", self.actualizar_botones)
@@ -467,18 +469,20 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         cerrar_ventana(self)
         abrir_ventana(VentanaCuenta)
 
-    def guardar_cuenta(self):
-        nombre_cuenta = self.entry_nombre_cuenta.get()
-
-        if nombre_cuenta:
-            self.cuentas.append(nombre_cuenta)
-            self.listbox_cuentas.insert(tk.END, nombre_cuenta)
+    def guardar_tipo_cuenta(self):
+        nombre_tipo_cuenta = self.entry_nombre_cuenta.get()
+        id = cm.generar_id_tipo_cuenta()
+        ingresarTipoCuenta = "INGRESAR|TIPO_CUENTA|(CODIGO_TC,NOMBRE_TC)|("+id+","+nombre_tipo_cuenta+")|"
+        print(ingresarTipoCuenta)
+        if nombre_tipo_cuenta:
+            self.cuentas.append(nombre_tipo_cuenta)
+            self.listbox_cuentas.insert(tk.END, nombre_tipo_cuenta)
             self.entry_nombre_cuenta.delete(0, tk.END)
             messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
         else:
             messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
 
-    def modificar_cuenta(self):
+    def modificar_tipo_cuenta(self):
         seleccion = self.listbox_cuentas.curselection()
 
         if seleccion:
@@ -497,7 +501,7 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         else:
             messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
 
-    def eliminar_cuenta(self):
+    def eliminar_tipo_cuenta(self):
         seleccion = self.listbox_cuentas.curselection()
 
         if seleccion:
@@ -568,7 +572,9 @@ class VentanaIngresarCuenta(tk.Tk):
     def guardar_cuenta(self):
         nombre_cuenta = self.entry_nombre_cuenta.get()
         tipo_cuenta = self.combobox_tipo_cuenta.get()
-
+        id = cm.generar_id_cuenta()
+        ingresarCuenta = "INGRESAR|MOTIVO|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|("+id+","+nombre_cuenta+")|"
+        print(ingresarCuenta)
         if nombre_cuenta and tipo_cuenta:
             self.cuentas.append((nombre_cuenta, tipo_cuenta))
             cuenta_text = f"{nombre_cuenta} - {tipo_cuenta}"
