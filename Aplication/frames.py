@@ -4,6 +4,12 @@ import contabilidad_methods as cm
 from tkinter import ttk
 from tkinter import messagebox
 from funciones_ventanas import abrir_ventana, cerrar_ventana
+import socket
+
+def crear_socket():
+    mi_socket = socket.socket()
+    mi_socket.connect(('localhost', 8000))
+    return mi_socket
 
 class VentanaLogin(tk.Tk):
     def __init__(self):
@@ -172,13 +178,13 @@ class VentanaAgregarMotivo(tk.Tk):
         id = nm.generar_id()
         ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")|"
         print(ingresoMotivo)
-        if nombre_motivo:
-            self.motivos.append(nombre_motivo)
-            self.listbox_motivos.insert(tk.END, nombre_motivo)
-            self.entry_nombre_motivo.delete(0, tk.END)
-            messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
+        mi_socket = crear_socket()
+        mi_socket.send(ingresoMotivo.encode("utf-8"))
+        respuesta = mi_socket.recv(1024)
+        print(respuesta)
+        mi_socket.close()
+        
+        
 
     def modificar_motivo(self):
         seleccion = self.listbox_motivos.curselection()
