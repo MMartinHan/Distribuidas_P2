@@ -490,9 +490,11 @@ class VentanaAgregarMotivo(tk.Tk):
         consultaMotivos = "CONSULTAR|MOTIVO|*"
         mi_socket.send(consultaMotivos.encode("utf-8"))
         self.treeview_motivos.delete(*self.treeview_motivos.get_children())
+        print("Hasta aqui funciona 1")
         data = b''
         data += mi_socket.recv(1024)
-        data_decoded = pickle.load(data)
+        print(data)
+        data_decoded = pickle.loads(data)
         print(data_decoded)
         print(type(data_decoded))
         mi_socket.close()
