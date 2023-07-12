@@ -2,12 +2,12 @@ from db import conexion
     
 def generar_id():
     cursor = conexion.cursor()
-    sql = "SELECT MAX(CODIGO_PEV) FROM parametroevaluacion"
+    sql = "SELECT MAX(CEDULA_CAN) FROM CANDIDATO"
     cursor.execute(sql)
     result = cursor.fetchone()
 
     if result[0] is None:
-        id = "PE01"  
+        id = "CAN01"
     else:
         letras = ""
         numeros = ""

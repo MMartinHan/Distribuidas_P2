@@ -159,13 +159,18 @@ class VentanaAgregarCandidato(tk.Tk):
         self.entry_nombre = tk.Entry(self.master)
         self.entry_nombre.pack()
 
-        self.label_fecha = tk.Label(self.master, text="Fecha de nacimiento:")
-        self.label_fecha.pack()
-        self.entry_fecha = tk.Entry(self.master)
-        self.entry_fecha.pack()
+        self.label_apellido = tk.Label(self.master, text="Apellido:")
+        self.label_apellido.pack()
+        self.entry_apellido = tk.Entry(self.master)
+        self.entry_apellido.pack()
 
-        self.btn_guardar = tk.Button(self.master, text="Guardar", command=self.guardar_candidato)
-        self.btn_guardar.pack()
+        self.label_fecha_nacimiento = tk.Label(self.master, text="Fecha de Nacimiento:")
+        self.label_fecha_nacimiento.pack()
+        self.entry_fecha_nacimiento = tk.Entry(self.master)
+        self.entry_fecha_nacimiento.pack()
+
+        self.btn_guardar_candidato = tk.Button(self.master, text="Guardar", command=self.guardar_candidato)
+        self.btn_guardar_candidato.pack()
 
         self.label_candidatos_guardados = tk.Label(self.master, text="Candidatos Guardados:")
         self.label_candidatos_guardados.pack()
@@ -173,26 +178,96 @@ class VentanaAgregarCandidato(tk.Tk):
         self.listbox_candidatos = tk.Listbox(self.master)
         self.listbox_candidatos.pack()
 
-        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.regresar)
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_candidato)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_candidato)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_candidatos.bind("<<ListboxSelect>>", self.actualizar_botones)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack()
+
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaNomina)
 
     def guardar_candidato(self):
         cedula = self.entry_cedula.get()
         nombre = self.entry_nombre.get()
-        fecha = self.entry_fecha.get()
+        apellido = self.entry_apellido.get()
+        fecha_nacimiento = self.entry_fecha_nacimiento.get()
 
-        if cedula != "" and nombre != "" and fecha != "":
-            self.candidatos.append({"Cédula": cedula, "Nombre": nombre, "Fecha de Nacimiento": fecha})
-            self.listbox_candidatos.insert(tk.END, f"Cédula: {cedula} - Nombre: {nombre} - Fecha de Nacimiento: {fecha}")
+        id_candidato = sm.generar_id()
+        ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})|"
+        print(ingresoCandidato)
+        mi_socket = crear_socket()
+        mi_socket.send(ingresoCandidato.encode("utf-8"))
+        respuesta = mi_socket.recv(1024)
+        print(respuesta)
+        mi_socket.close()
+
+        if cedula and nombre and apellido and fecha_nacimiento:
+            self.candidatos.append((cedula, nombre, apellido, fecha_nacimiento))
+            self.listbox_candidatos.insert(tk.END, f"{cedula} - {nombre} {apellido}")
             self.entry_cedula.delete(0, tk.END)
             self.entry_nombre.delete(0, tk.END)
-            self.entry_fecha.delete(0, tk.END)
+            self.entry_apellido.delete(0, tk.END)
+            self.entry_fecha_nacimiento.delete(0, tk.END)
+            messagebox.showinfo("Información", "Candidato guardado exitosamente.")
         else:
-            messagebox.showerror("Error", "Debe ingresar todos los campos")
+            messagebox.showwarning("Advertencia", "Ingrese todos los datos del candidato.")
 
-    def regresar(self):
-        cerrar_ventana(self)
-        abrir_ventana(VentanaSeleccion)
+    def modificar_candidato(self):
+        seleccion = self.listbox_candidatos.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            cedula_actual, nombre_actual, apellido_actual, fecha_nacimiento_actual = self.candidatos[indice]
+            cedula_modificada = self.entry_cedula.get()
+            nombre_modificado = self.entry_nombre.get()
+            apellido_modificado = self.entry_apellido.get()
+            fecha_nacimiento_modificada = self.entry_fecha_nacimiento.get()
+
+            if cedula_modificada and nombre_modificado and apellido_modificado and fecha_nacimiento_modificada:
+                self.candidatos[indice] = (cedula_modificada, nombre_modificado, apellido_modificado, fecha_nacimiento_modificada)
+                self.listbox_candidatos.delete(indice)
+                self.listbox_candidatos.insert(indice, f"{cedula_modificada} - {nombre_modificado} {apellido_modificado}")
+                self.entry_cedula.delete(0, tk.END)
+                self.entry_nombre.delete(0, tk.END)
+                self.entry_apellido.delete(0, tk.END)
+                self.entry_fecha_nacimiento.delete(0, tk.END)
+                messagebox.showinfo("Información", "Candidato modificado exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese todos los datos del candidato.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un candidato para modificar.")
+
+    def eliminar_candidato(self):
+        seleccion = self.listbox_candidatos.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            cedula, nombre, apellido, fecha_nacimiento = self.candidatos[indice]
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el candidato '{cedula} - {nombre} {apellido}'?")
+
+            if confirmacion:
+                self.candidatos.pop(indice)
+                self.listbox_candidatos.delete(indice)
+                messagebox.showinfo("Información", "Candidato eliminado exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un candidato para eliminar.")
+
+    def actualizar_botones(self, event):
+        seleccion = self.listbox_candidatos.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
 
 class VentanaAgregarParametro(tk.Tk):
     def __init__(self, master=None):
