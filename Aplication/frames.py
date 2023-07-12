@@ -145,6 +145,7 @@ class VentanaAgregarCandidato(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("600x400")
         self.candidatos = []
         self.create_widgets()
 
@@ -199,8 +200,13 @@ class VentanaAgregarCandidato(tk.Tk):
         apellido = self.entry_apellido.get()
         fecha_nacimiento = self.entry_fecha_nacimiento.get()
 
+<<<<<<< HEAD
         id_candidato = sm.generar_id_candidato()
         ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})|"
+=======
+        id_candidato = sm.generar_id()
+        ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})"
+>>>>>>> 9effbfc49782465fef958c1b1806f60bc79109f8
         print(ingresoCandidato)
         mi_socket = crear_socket()
         mi_socket.send(ingresoCandidato.encode("utf-8"))
@@ -273,6 +279,7 @@ class VentanaAgregarParametro(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("600x400")
         self.parametros = []
         self.create_widgets()
 
@@ -448,6 +455,7 @@ class VentanaAgregarMotivo(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("600x400")
         self.motivos = []
         self.create_widgets()
 
@@ -460,23 +468,25 @@ class VentanaAgregarMotivo(tk.Tk):
         self.btn_guardar_motivo = tk.Button(self.master, text="Guardar", command=self.guardar_motivo)
         self.btn_guardar_motivo.pack()
 
-        self.label_motivos_guardados = tk.Label(self.master, text="Motivos Guardadss:")
+        self.label_motivos_guardados = tk.Label(self.master, text="Motivos Guardados:")
         self.label_motivos_guardados.pack()
 
-        self.listbox_motivos = tk.Listbox(self.master)
-        self.listbox_motivos.pack()
+        self.treeview_motivos = ttk.Treeview(self.master, columns=("codigo", "nombre"), show="headings")
+        self.treeview_motivos.heading("codigo", text="Código")
+        self.treeview_motivos.heading("nombre", text="Nombre")
+        self.treeview_motivos.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_motivo)
-        self.btn_modificar.pack(side=tk.LEFT)
+        self.btn_modificar.pack(side=tk.LEFT, padx=5)
 
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_motivo)
-        self.btn_eliminar.pack(side=tk.LEFT)
+        self.btn_eliminar.pack(side=tk.LEFT, padx=5)
 
-        self.listbox_motivos.bind("<<ListboxSelect>>", self.actualizar_botones)
+        self.treeview_motivos.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack()
-    
+        self.btn_regresar.pack(side=tk.RIGHT)
+
     def mover_inicio(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaNomina)
@@ -484,7 +494,7 @@ class VentanaAgregarMotivo(tk.Tk):
     def guardar_motivo(self):
         nombre_motivo = self.entry_nombre_motivo.get()
         id = nm.generar_id()
-        ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")|"
+        ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")"
         print(ingresoMotivo)
         mi_socket = crear_socket()
         mi_socket.send(ingresoMotivo.encode("utf-8"))
@@ -542,6 +552,7 @@ class VentanaAgregarEmpleado(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("1100x600")
         self.empleados = []
         self.create_widgets()
 
@@ -555,6 +566,11 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.label_nombre.pack()
         self.entry_nombre = tk.Entry(self.master)
         self.entry_nombre.pack()
+
+        self.label_apellido = tk.Label(self.master, text="Apellido:")
+        self.label_apellido.pack()
+        self.entry_apellido = tk.Entry(self.master)
+        self.entry_apellido.pack()
 
         self.label_fecha = tk.Label(self.master, text="Fecha de ingreso:")
         self.label_fecha.pack()
@@ -572,8 +588,13 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.label_empleados_guardados = tk.Label(self.master, text="Empleados Guardados:")
         self.label_empleados_guardados.pack()
 
-        self.listbox_empleados = tk.Listbox(self.master)
-        self.listbox_empleados.pack()
+        self.treeview_empleados = ttk.Treeview(self.master, columns=("cedula", "nombre", "apellido", "fecha_ingreso", "sueldo"), show="headings")
+        self.treeview_empleados.heading("cedula", text="Cédula")
+        self.treeview_empleados.heading("nombre", text="Nombre")
+        self.treeview_empleados.heading("apellido", text="Apellido")
+        self.treeview_empleados.heading("fecha_ingreso", text="Fecha de ingreso")
+        self.treeview_empleados.heading("sueldo", text="Sueldo")
+        self.treeview_empleados.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_empleado)
         self.btn_modificar.pack(side=tk.LEFT)
@@ -581,10 +602,10 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_empleado)
         self.btn_eliminar.pack(side=tk.LEFT)
 
-        self.listbox_empleados.bind("<<ListboxSelect>>", self.llenar_campos)
+        self.treeview_empleados.bind("<<TreeviewSelect>>", self.llenar_campos)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack()
+        self.btn_regresar.pack(side=tk.RIGHT)
 
     def mover_inicio(self):
         self.destroy()
@@ -750,6 +771,7 @@ class VentanaIngresarTipoCuenta(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("600x400")
         self.cuentas = []
         self.create_widgets()
 
@@ -765,19 +787,21 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
 
-        self.listbox_cuentas = tk.Listbox(self.master)
-        self.listbox_cuentas.pack()
+        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo", "nombre"), show="headings")
+        self.treeview_cuentas.heading("codigo", text="Código")
+        self.treeview_cuentas.heading("nombre", text="Nombre")
+        self.treeview_cuentas.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_tipo_cuenta)
-        self.btn_modificar.pack(side=tk.LEFT)
+        self.btn_modificar.pack(side=tk.LEFT, padx=5)
 
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_tipo_cuenta)
-        self.btn_eliminar.pack(side=tk.LEFT)
+        self.btn_eliminar.pack(side=tk.LEFT, padx=5)
 
-        self.listbox_cuentas.bind("<<ListboxSelect>>", self.actualizar_botones)
+        self.treeview_cuentas.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack()
+        self.btn_regresar.pack(side=tk.RIGHT)
     
     def mover_inicio(self):
         cerrar_ventana(self)
@@ -786,7 +810,7 @@ class VentanaIngresarTipoCuenta(tk.Tk):
     def guardar_tipo_cuenta(self):
         nombre_tipo_cuenta = self.entry_nombre_cuenta.get()
         id = cm.generar_id_tipo_cuenta()
-        ingresarTipoCuenta = "INGRESAR|TIPO_CUENTA|(CODIGO_TC,NOMBRE_TC)|("+id+","+nombre_tipo_cuenta+")|"
+        ingresarTipoCuenta = "INGRESAR|TIPO_CUENTA|(CODIGO_TC,NOMBRE_TC)|("+id+","+nombre_tipo_cuenta+")"
         print(ingresarTipoCuenta)
         if nombre_tipo_cuenta:
             self.cuentas.append(nombre_tipo_cuenta)
@@ -844,6 +868,7 @@ class VentanaIngresarCuenta(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
+        self.geometry("600x400")
         self.cuentas = []
         self.tipos_cuenta = []
         self.create_widgets()
@@ -865,19 +890,21 @@ class VentanaIngresarCuenta(tk.Tk):
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
 
-        self.listbox_cuentas = tk.Listbox(self.master)
-        self.listbox_cuentas.pack()
+        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo", "nombre"), show="headings")
+        self.treeview_cuentas.heading("codigo", text="Código")
+        self.treeview_cuentas.heading("nombre", text="Nombre")
+        self.treeview_cuentas.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
-        self.btn_modificar.pack(side=tk.LEFT)
+        self.btn_modificar.pack(side=tk.LEFT, padx=5)
 
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_cuenta)
-        self.btn_eliminar.pack(side=tk.LEFT)
+        self.btn_eliminar.pack(side=tk.LEFT, padx=5)
 
-        self.listbox_cuentas.bind("<<ListboxSelect>>", self.actualizar_botones)
+        self.treeview_cuentas.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_atras)
-        self.btn_regresar.pack()
+        self.btn_regresar.pack(side=tk.RIGHT)
 
     def mover_atras(self):
         cerrar_ventana(self)
@@ -887,7 +914,7 @@ class VentanaIngresarCuenta(tk.Tk):
         nombre_cuenta = self.entry_nombre_cuenta.get()
         tipo_cuenta = self.combobox_tipo_cuenta.get()
         id = cm.generar_id_cuenta()
-        ingresarCuenta = "INGRESAR|MOTIVO|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|("+id+","+nombre_cuenta+")|"
+        ingresarCuenta = "INGRESAR|MOTIVO|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|("+id+","+nombre_cuenta+")"
         print(ingresarCuenta)
         if nombre_cuenta and tipo_cuenta:
             self.cuentas.append((nombre_cuenta, tipo_cuenta))
