@@ -496,11 +496,12 @@ class VentanaAgregarMotivo(tk.Tk):
     def guardar_motivo(self):
         nombre_motivo = self.entry_nombre_motivo.get()
         id = nm.generar_id()
-        ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|("+id+","+nombre_motivo+")|"
+        ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|"+id+","+nombre_motivo
         print(ingresoMotivo)
         mi_socket = crear_socket()
         mi_socket.send(ingresoMotivo.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
+        respuesta = respuesta.decode("utf-8")
         print(respuesta)
         mi_socket.close()
         
