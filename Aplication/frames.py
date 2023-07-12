@@ -199,14 +199,10 @@ class VentanaAgregarCandidato(tk.Tk):
         nombre = self.entry_nombre.get()
         apellido = self.entry_apellido.get()
         fecha_nacimiento = self.entry_fecha_nacimiento.get()
-
-<<<<<<< HEAD
         id_candidato = sm.generar_id_candidato()
         ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})|"
-=======
         id_candidato = sm.generar_id()
         ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})"
->>>>>>> 9effbfc49782465fef958c1b1806f60bc79109f8
         print(ingresoCandidato)
         mi_socket = crear_socket()
         mi_socket.send(ingresoCandidato.encode("utf-8"))
