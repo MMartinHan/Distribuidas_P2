@@ -495,8 +495,8 @@ class VentanaAgregarMotivo(tk.Tk):
         data += mi_socket.recv(1024)
         print(data)
         data_decoded = pickle.loads(data)
-        print(data_decoded)
-        print(type(data_decoded))
+        for motivo in data_decoded:
+            self.treeview_motivos.insert('', 'end', values=motivo)
         mi_socket.close()
 
     def mover_inicio(self):
