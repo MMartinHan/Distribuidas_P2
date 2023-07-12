@@ -490,7 +490,6 @@ class VentanaAgregarMotivo(tk.Tk):
         consultaMotivos = "CONSULTAR|MOTIVO|*"
         mi_socket.send(consultaMotivos.encode("utf-8"))
         self.treeview_motivos.delete(*self.treeview_motivos.get_children())
-        print("Hasta aqui funciona 1")
         data = b''
         data += mi_socket.recv(1024)
         print(data)
@@ -514,6 +513,10 @@ class VentanaAgregarMotivo(tk.Tk):
         respuesta = respuesta.decode("utf-8")
         print(respuesta)
         mi_socket.close()
+        
+        self.entry_nombre_motivo.delete(0, 'end')  # Borrar contenido del campo de entrada
+        self.rellenar_tabla()
+        
         
         
 
