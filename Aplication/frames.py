@@ -1,6 +1,7 @@
 import tkinter as tk
 import nomina_methods as nm
 import contabilidad_methods as cm
+import seleccion_methods as sm
 from tkinter import ttk
 from tkinter import messagebox
 from funciones_ventanas import abrir_ventana, cerrar_ventana
@@ -56,12 +57,16 @@ class VentanaOpciones(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=20)
 
-        self.boton_opcion_1 = tk.Button(self.frame_contenedor, text="SELECCION")
+        self.boton_opcion_1 = tk.Button(self.frame_contenedor, text="SELECCION", command=self.abrir_ventana_seleccion)
         self.boton_opcion_1.pack(side="left", padx=10)
         self.boton_opcion_2 = tk.Button(self.frame_contenedor, text="NOMINA", command=self.abrir_ventana_motivo)
         self.boton_opcion_2.pack(side="left", padx=10)
         self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="CONTABILIDAD", command=self.abrir_ventana_cuenta)
         self.boton_opcion_3.pack(side="left", padx=10)
+        
+    def abrir_ventana_seleccion(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
         
     def abrir_ventana_motivo(self):
         cerrar_ventana(self)
@@ -70,7 +75,247 @@ class VentanaOpciones(tk.Tk):
     def abrir_ventana_cuenta(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaCuenta)
+
+class VentanaSeleccion(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de selección")
+        self.geometry("600x400")
         
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Candidato")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
+
+        self.boton_opcion_1 = tk.Button(self.frame_contenedor, text="Ingresar candidato", command=self.agregar_candidato)
+        self.boton_opcion_1.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Parámetro de Evaluación")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
+
+        self.boton_opcion_2 = tk.Button(self.frame_contenedor, text="Ingresar parámetro de evaluación", command=self.agregar_parametro)
+        self.boton_opcion_2.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Evaluación")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=20)
+        
+        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Ingresar evaluación")
+        self.boton_opcion_3.pack(side="left", padx=10)
+        self.boton_opcion_4 = tk.Button(self.frame_contenedor, text="Modificar evaluación")
+        self.boton_opcion_4.pack(side="left", padx=10)
+        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Eliminar evaluación")
+        self.boton_opcion_5.pack(side="left", padx=10)
+        self.boton_opcion_6 = tk.Button(self.frame_contenedor, text="Consultar evaluación")
+        self.boton_opcion_6.pack(side="left", padx=10)
+        
+        self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
+        self.etiqueta_opciones.pack()
+        
+        self.frame_contenedor = tk.Frame(self)
+        self.frame_contenedor.pack(pady=10)
+        
+        self.boton_opcion_7 = tk.Button(self.frame_contenedor, text="Ranking de evaluados")
+        self.boton_opcion_7.pack(side="left", padx=5)
+        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Reporte cruzado")
+        self.boton_opcion_8.pack(side="left", padx=5)
+        
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.boton_regresar.pack()
+        
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaOpciones)
+        
+    def agregar_candidato(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAgregarCandidato)
+
+    def agregar_parametro(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAgregarParametro)
+
+class VentanaAgregarCandidato(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.candidatos = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_cedula = tk.Label(self.master, text="Cédula:")
+        self.label_cedula.pack()
+        self.entry_cedula = tk.Entry(self.master)
+        self.entry_cedula.pack()
+
+        self.label_nombre = tk.Label(self.master, text="Nombre:")
+        self.label_nombre.pack()
+        self.entry_nombre = tk.Entry(self.master)
+        self.entry_nombre.pack()
+
+        self.label_fecha = tk.Label(self.master, text="Fecha de nacimiento:")
+        self.label_fecha.pack()
+        self.entry_fecha = tk.Entry(self.master)
+        self.entry_fecha.pack()
+
+        self.btn_guardar = tk.Button(self.master, text="Guardar", command=self.guardar_candidato)
+        self.btn_guardar.pack()
+
+        self.label_candidatos_guardados = tk.Label(self.master, text="Candidatos Guardados:")
+        self.label_candidatos_guardados.pack()
+
+        self.listbox_candidatos = tk.Listbox(self.master)
+        self.listbox_candidatos.pack()
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.regresar)
+        self.btn_regresar.pack()
+
+    def guardar_candidato(self):
+        cedula = self.entry_cedula.get()
+        nombre = self.entry_nombre.get()
+        fecha = self.entry_fecha.get()
+
+        if cedula != "" and nombre != "" and fecha != "":
+            self.candidatos.append({"Cédula": cedula, "Nombre": nombre, "Fecha de Nacimiento": fecha})
+            self.listbox_candidatos.insert(tk.END, f"Cédula: {cedula} - Nombre: {nombre} - Fecha de Nacimiento: {fecha}")
+            self.entry_cedula.delete(0, tk.END)
+            self.entry_nombre.delete(0, tk.END)
+            self.entry_fecha.delete(0, tk.END)
+        else:
+            messagebox.showerror("Error", "Debe ingresar todos los campos")
+
+    def regresar(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
+
+class VentanaAgregarParametro(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.parametros = []
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.label_codigo_parametro = tk.Label(self.master, text="Código del parámetro:")
+        self.label_codigo_parametro.pack()
+        self.entry_codigo_parametro = tk.Entry(self.master)
+        self.entry_codigo_parametro.pack()
+
+        self.label_nombre_parametro = tk.Label(self.master, text="Nombre del parámetro:")
+        self.label_nombre_parametro.pack()
+        self.entry_nombre_parametro = tk.Entry(self.master)
+        self.entry_nombre_parametro.pack()
+
+        self.label_puntaje_maximo = tk.Label(self.master, text="Puntaje máximo:")
+        self.label_puntaje_maximo.pack()
+        self.entry_puntaje_maximo = tk.Entry(self.master)
+        self.entry_puntaje_maximo.pack()
+
+        self.btn_guardar_parametro = tk.Button(self.master, text="Guardar", command=self.guardar_parametro)
+        self.btn_guardar_parametro.pack()
+
+        self.label_parametros_guardados = tk.Label(self.master, text="Parámetros Guardados:")
+        self.label_parametros_guardados.pack()
+
+        self.listbox_parametros = tk.Listbox(self.master)
+        self.listbox_parametros.pack()
+
+        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_parametro)
+        self.btn_modificar.pack(side=tk.LEFT)
+
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_parametro)
+        self.btn_eliminar.pack(side=tk.LEFT)
+
+        self.listbox_parametros.bind("<<ListboxSelect>>", self.actualizar_botones)
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
+
+    def guardar_parametro(self):
+        codigo = self.entry_codigo_parametro.get()
+        nombre = self.entry_nombre_parametro.get()
+        puntaje_maximo = self.entry_puntaje_maximo.get()
+
+        if codigo and nombre and puntaje_maximo:
+            parametro = {"Código": codigo, "Nombre": nombre, "Puntaje Máximo": puntaje_maximo}
+            self.parametros.append(parametro)
+            self.listbox_parametros.insert(tk.END, f"Código: {codigo} - Nombre: {nombre} - Puntaje Máximo: {puntaje_maximo}")
+            self.limpiar_campos()
+            messagebox.showinfo("Información", "Parámetro guardado exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+
+    def modificar_parametro(self):
+        seleccion = self.listbox_parametros.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            parametro_actual = self.listbox_parametros.get(indice)
+            parametro_modificado = self.get_campos_parametro()
+
+            if parametro_modificado:
+                self.parametros[indice] = parametro_modificado
+                self.listbox_parametros.delete(indice)
+                self.listbox_parametros.insert(indice, parametro_modificado)
+                self.limpiar_campos()
+                messagebox.showinfo("Información", "Parámetro modificado exitosamente.")
+            else:
+                messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un parámetro para modificar.")
+
+    def eliminar_parametro(self):
+        seleccion = self.listbox_parametros.curselection()
+
+        if seleccion:
+            indice = seleccion[0]
+            parametro = self.listbox_parametros.get(indice)
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el parámetro '{parametro}'?")
+
+            if confirmacion:
+                self.parametros.pop(indice)
+                self.listbox_parametros.delete(indice)
+                messagebox.showinfo("Información", "Parámetro eliminado exitosamente.")
+        else:
+            messagebox.showwarning("Advertencia", "Seleccione un parámetro para eliminar.")
+
+    def actualizar_botones(self, event):
+        seleccion = self.listbox_parametros.curselection()
+
+        if seleccion:
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
+        else:
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+
+    def get_campos_parametro(self):
+        codigo = self.entry_codigo_parametro.get()
+        nombre = self.entry_nombre_parametro.get()
+        puntaje_maximo = self.entry_puntaje_maximo.get()
+
+        if codigo and nombre and puntaje_maximo:
+            return {"Código": codigo, "Nombre": nombre, "Puntaje Máximo": puntaje_maximo}
+        else:
+            return None
+
+    def limpiar_campos(self):
+        self.entry_codigo_parametro.delete(0, tk.END)
+        self.entry_nombre_parametro.delete(0, tk.END)
+        self.entry_puntaje_maximo.delete(0, tk.END)
+
+
+
 class VentanaNomina(tk.Tk):
     def __init__(self):
         super().__init__()
