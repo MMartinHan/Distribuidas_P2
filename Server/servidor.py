@@ -1,4 +1,5 @@
 import socket
+import pickle
 import percistencia as per
 
 mi_socket = socket.socket()
@@ -10,16 +11,14 @@ while True:
     print("Nueva conexión establecida!")
     print(addr)
     
-    conexion.send("Hola te saludo desde el servidor".encode("utf-8"))
-    
     # Esperar la respuesta del cliente
     respuesta = conexion.recv(1024)
     respuesta = respuesta.decode("utf-8")
     sql_query = respuesta.split("|")
-    values = sql_query[3].split(",")
-    print(values)
     if sql_query[0]=="INGRESAR":
         print("Ingresar")
+        values = sql_query[3].split(",")
+        print(values)
         sql = "INSERT INTO "+sql_query[1]+" "+sql_query[2]+" "+"VALUES"+" ("
         for i in range(len(values)):
             sql = sql + "'"+values[i]+"',"
@@ -30,5 +29,13 @@ while True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
-    
+    elif sql_query[0]=="CONSULTAR":
+        print("Consultar")
+        sql = "SELECT " + sql_query[2] + " FROM " + sql_query[1]
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+        print("Hasta aqui funciona 2")
     conexion.close()
