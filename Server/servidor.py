@@ -16,10 +16,6 @@ while True:
     respuesta = conexion.recv(1024)
     respuesta = respuesta.decode("utf-8")
     sql_query = respuesta.split("|")
-    print(type(respuesta))
-    print(type(sql_query))
-    print(sql_query)
-    print(type(sql_query[3]))
     values = sql_query[3].split(",")
     print(values)
     if sql_query[0]=="INGRESAR":
@@ -30,6 +26,9 @@ while True:
         sql = sql[:-1]
         sql = sql + ")"
         print(sql)
-        per.persistencia(sql)
+        if per.persistencia(sql) == True:
+            conexion.send("Orden ejecutada con exito".encode("utf-8"))
+        else:
+            conexion.send("Error al ejecutar la orden".encode("utf-8"))
     
     conexion.close()
