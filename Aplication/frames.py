@@ -521,41 +521,42 @@ class VentanaAgregarMotivo(tk.Tk):
         
 
     def modificar_motivo(self):
-        seleccion = self.listbox_motivos.curselection()
+        seleccion = self.treeview_motivos.selection()
 
         if seleccion:
-            indice = seleccion[0]
-            nombre_motivo_actual = self.listbox_motivos.get(indice)
-            nombre_motivo_modificado = self.entry_nombre_motivo.get()
+            # Obtener los valores actuales del motivo seleccionado
+            item = self.treeview_motivos.item(seleccion)
+            codigo_actual = item['values'][0]
+            nombre_actual = item['values'][1]
+            print(codigo_actual)
+            print(nombre_actual)
+            codigo_actual = str(codigo_actual)
+            nuevo_nombre = self.entry_nombre_motivo.get()
+            modificarMotivo = "MODIFICAR|MOTIVO|"+nuevo_nombre+"|"+codigo_actual
+            mi_socket = crear_socket()
+            mi_socket.send(modificarMotivo.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.rellenar_tabla()
 
-            if nombre_motivo_modificado:
-                self.motivos[indice] = nombre_motivo_modificado
-                self.listbox_motivos.delete(indice)
-                self.listbox_motivos.insert(indice, nombre_motivo_modificado)
-                self.entry_nombre_motivo.delete(0, tk.END)
-                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
 
     def eliminar_motivo(self):
-        seleccion = self.listbox_motivos.curselection()
-
+        seleccion = self.treeview_motivos.selection()
         if seleccion:
-            indice = seleccion[0]
-            nombre_motivo = self.listbox_motivos.get(indice)
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar la cuenta '{nombre_motivo}'?")
-
-            if confirmacion:
-                self.motivos.pop(indice)
-                self.listbox_motivos.delete(indice)
-                messagebox.showinfo("Información", "Cuenta eliminada exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
+            item = self.treeview_motivos.item(seleccion)
+            codigo_actual = item['values'][0]
+            codigo_actual = str(codigo_actual)
+            eliminarMotivo = "ELIMINAR|MOTIVO|"+codigo_actual
+            mi_socket = crear_socket()
+            mi_socket.send(eliminarMotivo.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.rellenar_tabla()
 
     def actualizar_botones(self, event):
-        seleccion = self.listbox_motivos.curselection()
+        seleccion = self.treeview_motivos.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
