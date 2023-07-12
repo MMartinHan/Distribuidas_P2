@@ -1,4 +1,5 @@
 import tkinter as tk
+import pickle
 import nomina_methods as nm
 import contabilidad_methods as cm
 import seleccion_methods as sm
@@ -454,6 +455,7 @@ class VentanaAgregarMotivo(tk.Tk):
         self.geometry("600x400")
         self.motivos = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
         self.label_nombre_motivo = tk.Label(self.master, text="Nombre del motivo:")
@@ -482,6 +484,18 @@ class VentanaAgregarMotivo(tk.Tk):
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack(side=tk.RIGHT)
+
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaMotivos = "CONSULTAR|MOTIVO|*"
+        mi_socket.send(consultaMotivos.encode("utf-8"))
+        self.treeview_motivos.delete(*self.treeview_motivos.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.load(data)
+        print(data_decoded)
+        print(type(data_decoded))
+        mi_socket.close()
 
     def mover_inicio(self):
         cerrar_ventana(self)
