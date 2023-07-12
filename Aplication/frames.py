@@ -191,7 +191,7 @@ class VentanaAgregarCandidato(tk.Tk):
 
     def mover_inicio(self):
         cerrar_ventana(self)
-        abrir_ventana(VentanaNomina)
+        abrir_ventana(VentanaSeleccion)
 
     def guardar_candidato(self):
         cedula = self.entry_cedula.get()
@@ -199,7 +199,7 @@ class VentanaAgregarCandidato(tk.Tk):
         apellido = self.entry_apellido.get()
         fecha_nacimiento = self.entry_fecha_nacimiento.get()
 
-        id_candidato = sm.generar_id()
+        id_candidato = sm.generar_id_candidato()
         ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})|"
         print(ingresoCandidato)
         mi_socket = crear_socket()
@@ -277,11 +277,6 @@ class VentanaAgregarParametro(tk.Tk):
         self.create_widgets()
 
     def create_widgets(self):
-        self.label_codigo_parametro = tk.Label(self.master, text="Código del parámetro:")
-        self.label_codigo_parametro.pack()
-        self.entry_codigo_parametro = tk.Entry(self.master)
-        self.entry_codigo_parametro.pack()
-
         self.label_nombre_parametro = tk.Label(self.master, text="Nombre del parámetro:")
         self.label_nombre_parametro.pack()
         self.entry_nombre_parametro = tk.Entry(self.master)
@@ -313,39 +308,48 @@ class VentanaAgregarParametro(tk.Tk):
         self.btn_regresar.pack()
 
     def mover_inicio(self):
-        cerrar_ventana(self)
-        abrir_ventana(VentanaSeleccion)
+        self.master.destroy()
+        VentanaSeleccion(self.master)
 
     def guardar_parametro(self):
-        codigo = self.entry_codigo_parametro.get()
-        nombre = self.entry_nombre_parametro.get()
+        nombre_parametro = self.entry_nombre_parametro.get()
         puntaje_maximo = self.entry_puntaje_maximo.get()
-
-        if codigo and nombre and puntaje_maximo:
-            parametro = {"Código": codigo, "Nombre": nombre, "Puntaje Máximo": puntaje_maximo}
-            self.parametros.append(parametro)
-            self.listbox_parametros.insert(tk.END, f"Código: {codigo} - Nombre: {nombre} - Puntaje Máximo: {puntaje_maximo}")
-            self.limpiar_campos()
+        
+        if  nombre_parametro and puntaje_maximo:
+            id = sm.generar_id_parametroEvaluacion()
+            ingresoParametro = f"INGRESAR|PARAMETROEVALUACION|(CODIGO_PEV,NOMBRE_PEV,PUNTAJE_MAX)|({id},{nombre_parametro},{puntaje_maximo})|"
+            print(ingresoParametro)
+            mi_socket = crear_socket()
+            mi_socket.send(ingresoParametro.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            print(respuesta)
+            mi_socket.close()
+            self.parametros.append((nombre_parametro, puntaje_maximo))
+            self.listbox_parametros.insert(tk.END, f"{nombre_parametro} - {puntaje_maximo}")
+            self.entry_nombre_parametro.delete(0, tk.END)
+            self.entry_puntaje_maximo.delete(0, tk.END)
             messagebox.showinfo("Información", "Parámetro guardado exitosamente.")
         else:
-            messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+            messagebox.showwarning("Advertencia", "Por favor, complete todos los campos.")
 
     def modificar_parametro(self):
         seleccion = self.listbox_parametros.curselection()
 
         if seleccion:
             indice = seleccion[0]
-            parametro_actual = self.listbox_parametros.get(indice)
-            parametro_modificado = self.get_campos_parametro()
+            parametro_actual = self.parametros[indice]
+            nombre_parametro = self.entry_nombre_parametro.get()
+            puntaje_maximo = self.entry_puntaje_maximo.get()
 
-            if parametro_modificado:
-                self.parametros[indice] = parametro_modificado
+            if nombre_parametro and puntaje_maximo:
+                self.parametros[indice] = (nombre_parametro, puntaje_maximo)
                 self.listbox_parametros.delete(indice)
-                self.listbox_parametros.insert(indice, parametro_modificado)
-                self.limpiar_campos()
+                self.listbox_parametros.insert(indice, f"{nombre_parametro} - {puntaje_maximo}")
+                self.entry_nombre_parametro.delete(0, tk.END)
+                self.entry_puntaje_maximo.delete(0, tk.END)
                 messagebox.showinfo("Información", "Parámetro modificado exitosamente.")
             else:
-                messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+                messagebox.showwarning("Advertencia", "Ingrese valores válidos para todos los campos.")
         else:
             messagebox.showwarning("Advertencia", "Seleccione un parámetro para modificar.")
 
@@ -354,8 +358,8 @@ class VentanaAgregarParametro(tk.Tk):
 
         if seleccion:
             indice = seleccion[0]
-            parametro = self.listbox_parametros.get(indice)
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el parámetro '{parametro}'?")
+            parametro = self.parametros[indice]
+            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el parámetro '{parametro[0]}'?")
 
             if confirmacion:
                 self.parametros.pop(indice)
@@ -373,22 +377,6 @@ class VentanaAgregarParametro(tk.Tk):
         else:
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
-
-    def get_campos_parametro(self):
-        codigo = self.entry_codigo_parametro.get()
-        nombre = self.entry_nombre_parametro.get()
-        puntaje_maximo = self.entry_puntaje_maximo.get()
-
-        if codigo and nombre and puntaje_maximo:
-            return {"Código": codigo, "Nombre": nombre, "Puntaje Máximo": puntaje_maximo}
-        else:
-            return None
-
-    def limpiar_campos(self):
-        self.entry_codigo_parametro.delete(0, tk.END)
-        self.entry_nombre_parametro.delete(0, tk.END)
-        self.entry_puntaje_maximo.delete(0, tk.END)
-
 
 
 class VentanaNomina(tk.Tk):
