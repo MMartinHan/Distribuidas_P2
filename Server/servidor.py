@@ -10,10 +10,11 @@ while True:
     conexion, addr = mi_socket.accept()
     print("Nueva conexión establecida!")
     print(addr)
-    
     # Esperar la respuesta del cliente
     respuesta = conexion.recv(1024)
     respuesta = respuesta.decode("utf-8")
+    print(respuesta)
+    print(respuesta)
     sql_query = respuesta.split("|")
     if sql_query[0]=="INGRESAR":
         print("Ingresar")
@@ -24,7 +25,6 @@ while True:
             sql = sql + "'"+values[i]+"',"
         sql = sql[:-1]
         sql = sql + ")"
-        print(sql)
         if per.persistencia(sql) == True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
@@ -48,7 +48,6 @@ while True:
     elif sql_query[0]=="MODIFICAR":
         print("Modificar")
         sql = "UPDATE " + sql_query[1] + " SET NOMBRE_MOT='" + sql_query[2] + "' WHERE CODIGO_MOT=" + sql_query[3]
-        print(sql)
         if per.persistencia(sql) == True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
