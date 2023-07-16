@@ -506,20 +506,15 @@ class VentanaAgregarMotivo(tk.Tk):
         nombre_motivo = self.entry_nombre_motivo.get()
         id = nm.generar_id()
         ingresoMotivo = "INGRESAR|MOTIVO|(CODIGO_MOT,NOMBRE_MOT)|"+id+","+nombre_motivo
-        print(ingresoMotivo)
         mi_socket = crear_socket()
         mi_socket.send(ingresoMotivo.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
         print(respuesta)
         mi_socket.close()
-        
         self.entry_nombre_motivo.delete(0, 'end')  # Borrar contenido del campo de entrada
         self.rellenar_tabla()
         
-        
-        
-
     def modificar_motivo(self):
         seleccion = self.treeview_motivos.selection()
 
@@ -569,11 +564,21 @@ class VentanaAgregarEmpleado(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        self.geometry("1100x600")
+        self.geometry("1300x600")
         self.empleados = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
+        
+        self.label_motivo = tk.Label(self.master, text="Escoga el motivo")
+        self.label_motivo.pack()
+        op = self.rellenar_combobox()
+        opcion_seleccionada = tk.StringVar()
+        self.combo_motivo = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
+        self.combo_motivo.pack()
+        
+        
         self.label_cedula = tk.Label(self.master, text="Cédula:")
         self.label_cedula.pack()
         self.entry_cedula = tk.Entry(self.master)
@@ -605,12 +610,19 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.label_empleados_guardados = tk.Label(self.master, text="Empleados Guardados:")
         self.label_empleados_guardados.pack()
 
-        self.treeview_empleados = ttk.Treeview(self.master, columns=("cedula", "nombre", "apellido", "fecha_ingreso", "sueldo"), show="headings")
+        self.treeview_empleados = ttk.Treeview(self.master, columns=("motivo","cedula", "nombre", "apellido", "fecha_ingreso", "sueldo"), show="headings")
+        self.treeview_empleados.heading("motivo", text="Motivo")
         self.treeview_empleados.heading("cedula", text="Cédula")
         self.treeview_empleados.heading("nombre", text="Nombre")
         self.treeview_empleados.heading("apellido", text="Apellido")
         self.treeview_empleados.heading("fecha_ingreso", text="Fecha de ingreso")
         self.treeview_empleados.heading("sueldo", text="Sueldo")
+        self.treeview_empleados.column("motivo", anchor=tk.CENTER)
+        self.treeview_empleados.column("cedula", anchor=tk.CENTER)
+        self.treeview_empleados.column("nombre", anchor=tk.CENTER)
+        self.treeview_empleados.column("apellido", anchor=tk.CENTER)
+        self.treeview_empleados.column("fecha_ingreso", anchor=tk.CENTER)
+        self.treeview_empleados.column("sueldo", anchor=tk.CENTER)
         self.treeview_empleados.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_empleado)
@@ -619,49 +631,82 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_empleado)
         self.btn_eliminar.pack(side=tk.LEFT)
 
-        self.treeview_empleados.bind("<<TreeviewSelect>>", self.llenar_campos)
+        self.treeview_empleados.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack(side=tk.RIGHT)
 
+    def rellenar_combobox(self):
+        opciones = nm.consultar_motivos()
+        return opciones
+    
     def mover_inicio(self):
         self.destroy()
         abrir_ventana(VentanaNomina)
+    
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaMotivos = "CONSULTAR_EMPLEADO|EMPLEADO|*"
+        mi_socket.send(consultaMotivos.encode("utf-8"))
+        self.treeview_empleados.delete(*self.treeview_empleados.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_empleados.insert('', 'end', values=motivo)
+        mi_socket.close()
 
     def guardar_empleado(self):
+        codico_mot = self.combo_motivo.get()
         cedula = self.entry_cedula.get()
         nombre = self.entry_nombre.get()
+        apellido = self.entry_apellido.get()
         fecha = self.entry_fecha.get()
         sueldo = self.entry_sueldo.get()
-        ingresarEmpleado = "INGRESAR|EMPLEADO|(CODIGO_MOT, CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, FECHA_ING_EMP, SUELDO_EMP)|(" + ", " + str(cedula) + ", " + str(nombre) + ", " + str(fecha) + ", " + str(sueldo) + ")"
+        ingresarEmpleado = "INGRESAR|EMPLEADO|(CODIGO_MOT, CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, FECHA_ING_EMP, SUELDO_EMP)|"+ str(codico_mot[0]) + ", " + str(cedula) + ", " + str(nombre)+ ", "+ str(apellido) + ", " + str(fecha) + ", " + str(sueldo)
         print(ingresarEmpleado)
-        if cedula and nombre and fecha and sueldo:
-            empleado = (cedula, nombre, fecha, sueldo)
-            self.empleados.append(empleado)
-            self.listbox_empleados.insert(tk.END, empleado)
-            self.limpiar_campos()
-            messagebox.showinfo("Información", "Empleado guardado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
+        mi_socket = crear_socket()
+        mi_socket.send(ingresarEmpleado.encode("utf-8"))
+        respuesta = mi_socket.recv(1024)
+        respuesta = respuesta.decode("utf-8")
+        print(respuesta)
+        mi_socket.close()
+        self.combo_motivo.set('')  # Borrar contenido del campo de entrada
+        self.entry_cedula.delete(0, 'end')  
+        self.entry_nombre.delete(0, 'end')  
+        self.entry_apellido.delete(0, 'end')  
+        self.entry_fecha.delete(0, 'end')  
+        self.entry_sueldo.delete(0, 'end')  
+        self.rellenar_tabla()
 
     def modificar_empleado(self):
-        seleccion = self.listbox_empleados.curselection()
+        seleccion = self.treeview_empleados.selection()
 
         if seleccion:
-            indice = seleccion[0]
-            empleado_actual = self.listbox_empleados.get(indice)
-            empleado_modificado = self.get_campos_empleado()
-
-            if empleado_modificado:
-                self.empleados[indice] = empleado_modificado
-                self.listbox_empleados.delete(indice)
-                self.listbox_empleados.insert(indice, empleado_modificado)
-                self.limpiar_campos()
-                messagebox.showinfo("Información", "Empleado modificado exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese todos los campos requeridos.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un empleado para modificar.")
+            # Obtener los valores actuales del motivo seleccionado
+            item = self.treeview_empleados.item(seleccion)
+            codigo_actual = item['values'][0]
+            cedula_actual = item['values'][1]
+            nombre_actual = item['values'][2]
+            apellido_actual = item['values'][3]
+            fecha_actual = item['values'][4]
+            sueldo_actual = item['values'][5]
+            print(codigo_actual)
+            print(cedula_actual)
+            print(nombre_actual)
+            print(apellido_actual)
+            print(fecha_actual)
+            print(sueldo_actual)
+            '''codigo_actual = str(codigo_actual)
+            nuevo_nombre = self.entry_nombre_motivo.get()
+            modificarMotivo = "MODIFICAR|MOTIVO|"+nuevo_nombre+"|"+codigo_actual
+            mi_socket = crear_socket()
+            mi_socket.send(modificarMotivo.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.rellenar_tabla()'''
 
     def eliminar_empleado(self):
         seleccion = self.listbox_empleados.curselection()
@@ -678,22 +723,27 @@ class VentanaAgregarEmpleado(tk.Tk):
         else:
             messagebox.showwarning("Advertencia", "Seleccione un empleado para eliminar.")    
             
-    def llenar_campos(self, event):
-        seleccion = self.listbox_empleados.curselection()
+    def actualizar_botones(self, event):
+        seleccion = self.treeview_empleados.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
-            empleado = self.listbox_empleados.get(indice)
+            empleado = self.treeview_empleados.item(indice)['values']
+            print(empleado)
+            self.combo_motivo.set('')
+            self.combo_motivo.set(empleado[0])
             self.entry_cedula.delete(0, tk.END)
-            self.entry_cedula.insert(tk.END, empleado[0])
+            self.entry_cedula.insert(tk.END, empleado[1])
             self.entry_nombre.delete(0, tk.END)
-            self.entry_nombre.insert(tk.END, empleado[1])
+            self.entry_nombre.insert(tk.END, empleado[2])
+            self.entry_apellido.delete(0, tk.END)
+            self.entry_apellido.insert(tk.END, empleado[3])
             self.entry_fecha.delete(0, tk.END)
-            self.entry_fecha.insert(tk.END, empleado[2])
+            self.entry_fecha.insert(tk.END, empleado[4])
             self.entry_sueldo.delete(0, tk.END)
-            self.entry_sueldo.insert(tk.END, empleado[3])
+            self.entry_sueldo.insert(tk.END, empleado[5])
         else:
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)

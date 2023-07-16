@@ -30,9 +30,7 @@ while True:
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
     elif sql_query[0]=="CONSULTAR":
-        print("Consultar")
         sql = "SELECT " + sql_query[2] + " FROM " + sql_query[1]
-        print(sql)
         resultado = per.persistencia_2(sql)
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
@@ -62,4 +60,21 @@ while True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
+    elif sql_query[0]=="OBTENER_MOTIVO":
+        print("Obtener motivo")
+        sql = "SELECT * FROM " + sql_query[1]
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_EMPLEADO":
+        print("Consultar empleado")
+        sql = "SELECT * FROM " + sql_query[1]
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+        
     conexion.close()

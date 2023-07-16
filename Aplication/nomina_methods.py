@@ -22,3 +22,14 @@ def generar_id():
         id += 1
         id = str(id)
     return id
+
+def consultar_motivos():
+    mi_socket = crear_socket()
+    consultaMotivos = "OBTENER_MOTIVO|MOTIVO|CODIGO_MOT,NOMBRE_MOT"
+    mi_socket.send(consultaMotivos.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    print(data)
+    data_decoded = pickle.loads(data)
+    print(data_decoded)
+    return data_decoded
