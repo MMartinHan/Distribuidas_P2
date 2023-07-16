@@ -26,10 +26,11 @@ def generar_id_tipo_cuenta():
     result = pickle.loads(data)
     result = str(result)
     print(result)
-    if result == "":
+    if result  == "None":
         id = "1"  
     else:
         result = result[1:-1]
+        print(result)
         id = int(result)
         id += 1
         id = str(id)
