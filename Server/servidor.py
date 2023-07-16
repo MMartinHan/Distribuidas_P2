@@ -10,10 +10,11 @@ while True:
     conexion, addr = mi_socket.accept()
     print("Nueva conexión establecida!")
     print(addr)
-    
     # Esperar la respuesta del cliente
     respuesta = conexion.recv(1024)
     respuesta = respuesta.decode("utf-8")
+    print(respuesta)
+    print(respuesta)
     sql_query = respuesta.split("|")
     if sql_query[0]=="INGRESAR":
         print("Ingresar")
@@ -24,7 +25,6 @@ while True:
             sql = sql + "'"+values[i]+"',"
         sql = sql[:-1]
         sql = sql + ")"
-        print(sql)
         if per.persistencia(sql) == True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
@@ -32,7 +32,6 @@ while True:
     elif sql_query[0]=="CONSULTAR":
         print("Consultar")
         sql = "SELECT " + sql_query[2] + " FROM " + sql_query[1]
-        print(sql)
         resultado = per.persistencia_2(sql)
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
@@ -50,7 +49,6 @@ while True:
     elif sql_query[0]=="MODIFICAR":
         print("Modificar")
         sql = "UPDATE " + sql_query[1] + " SET NOMBRE_MOT='" + sql_query[2] + "' WHERE CODIGO_MOT=" + sql_query[3]
-        print(sql)
         if per.persistencia(sql) == True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
@@ -58,6 +56,39 @@ while True:
     elif sql_query[0]=="ELIMINAR":
         print("Eliminar")
         sql = "DELETE FROM " + sql_query[1] + " WHERE CODIGO_MOT=" + sql_query[2]
+        if per.persistencia(sql) == True:
+            conexion.send("Orden ejecutada con exito".encode("utf-8"))
+        else:
+            conexion.send("Error al ejecutar la orden".encode("utf-8"))
+    elif sql_query[0]=="CONSULTAR_TIPO_CUENTA":
+        print("Consultar tipo cuenta")
+        sql = "SELECT " + sql_query[2] + " FROM " + sql_query[1] 
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultado)
+        print(type(resultado))
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_TIPO_CUENTA_ID":
+        print("Consultar tipo cuenta")
+        sql = "SELECT " + sql_query[2] + " FROM " + sql_query[1] 
+        resultado = per.persistencia_2(sql)
+        resultado = str(resultado)
+        resultado = resultado[2:-3]
+        resultadoAux = pickle.dumps(resultado)
+        print(resultado)
+        print(type(resultado))
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="ELIMINAR_TC":
+        print("Eliminar")
+        sql = "DELETE FROM " + sql_query[1] + " WHERE CODIGO_TC=" + sql_query[2]
+        if per.persistencia(sql) == True:
+            conexion.send("Orden ejecutada con exito".encode("utf-8"))
+        else:
+            conexion.send("Error al ejecutar la orden".encode("utf-8"))
+    elif sql_query[0]=="MODIFICAR_TC":
+        print("Modificar")
+        sql = "UPDATE " + sql_query[1] + " SET NOMBRE_TC='" + sql_query[2] + "' WHERE CODIGO_TC=" + sql_query[3]
+        print(sql)
         if per.persistencia(sql) == True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
