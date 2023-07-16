@@ -15,8 +15,6 @@ def consultar_tipo_cuenta():
     data += mi_socket.recv(1024)
     result = pickle.loads(data)
     mi_socket.close()
-    print("-----Este es el resultado del tipo de cuenta")
-    print(result)
     return result
     
 def generar_id_tipo_cuenta():
@@ -38,29 +36,20 @@ def generar_id_tipo_cuenta():
     return id
 
 def generar_id_cuenta():
-    cursor = conexion.cursor()
-    sql = "SELECT MAX(CODIGO_CUE) FROM cuenta"
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    if result[0] is None:
-        id = "C01"  
+    mi_socket = crear_socket()
+    consultaMotivos = "CONSULTAR|CUENTA|MAX(CODIGO_CUE)"
+    mi_socket.send(consultaMotivos.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    result = pickle.loads(data)
+    result = str(result)
+    print(result)
+    if result == "None":
+        id = "1"  
     else:
-        letras = ""
-        numeros = ""
-        for i in result[0]:
-            if i.isalpha():
-                letras += i
-            else:
-                numeros += i
-
-        if numeros[0] == "0":
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            nuevo = "0" + nuevo
-            id = letras + nuevo
-        else:
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            id = letras + nuevo
+        result = result[3:-4]
+        print(result)
+        id = int(result)
+        id += 1
+        id = str(id)
     return id

@@ -953,6 +953,7 @@ class VentanaIngresarCuenta(tk.Tk):
         self.cuentas = []
         self.tipos_cuenta = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
         self.label_nombre_cuenta = tk.Label(self.master, text="Nombre de la Cuenta:")
@@ -972,9 +973,10 @@ class VentanaIngresarCuenta(tk.Tk):
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
 
-        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo", "nombre"), show="headings")
-        self.treeview_cuentas.heading("codigo", text="Código")
-        self.treeview_cuentas.heading("nombre", text="Nombre")
+        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo_tipo", "codigo_cuenta", "nombre_cuenta"), show="headings")
+        self.treeview_cuentas.heading("codigo_tipo", text="CódigoTipoCuenta")
+        self.treeview_cuentas.heading("codigo_cuenta", text="CódigoCuenta")
+        self.treeview_cuentas.heading("nombre_cuenta", text="NombreCuenta")
         self.treeview_cuentas.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
@@ -988,6 +990,19 @@ class VentanaIngresarCuenta(tk.Tk):
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_atras)
         self.btn_regresar.pack(side=tk.RIGHT)
 
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaMotivos = "CONSULTAR|CUENTA|*"
+        mi_socket.send(consultaMotivos.encode("utf-8"))
+        self.treeview_cuentas.delete(*self.treeview_cuentas.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_cuentas.insert('', 'end', values=motivo)
+        mi_socket.close()
+
     def mover_atras(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaCuenta)
@@ -995,12 +1010,14 @@ class VentanaIngresarCuenta(tk.Tk):
     def guardar_cuenta(self):
         nombre_cuenta = self.entry_nombre_cuenta.get()
         tipo_cuenta = self.combobox_tipo_cuenta.get()
-        print(nombre_cuenta)
-        print(type(nombre_cuenta))
-        print(tipo_cuenta)
-        print(type(tipo_cuenta))
+        tipo_cuenta = tipo_cuenta.split(" ")
+        idTipoCuenta = tipo_cuenta[0]
         id = cm.generar_id_cuenta()
-        ingresarCuenta = "INGRESAR|CUENTA|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|("+id+","+nombre_cuenta+")"
+        ingresarCuenta = "INGRESAR|CUENTA|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|"+idTipoCuenta+","+id+","+nombre_cuenta
+        mi_socket = crear_socket()
+        mi_socket.send(ingresarCuenta.encode("utf-8"))
+        respuesta = mi_socket.recv(1024).decode("utf-8")
+        mi_socket.close()
         print(ingresarCuenta)
         if nombre_cuenta and tipo_cuenta:
             self.cuentas.append((nombre_cuenta, tipo_cuenta))
@@ -1012,27 +1029,31 @@ class VentanaIngresarCuenta(tk.Tk):
             messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta y seleccione un tipo de cuenta.")
 
     def modificar_cuenta(self):
-        seleccion = self.listbox_cuentas.curselection()
+        seleccion = self.treeview_cuentas.selection()
 
         if seleccion:
-            indice = seleccion[0]
-            cuenta_actual = self.listbox_cuentas.get(indice)
-            nombre_cuenta_actual, tipo_cuenta_actual = cuenta_actual.split(" - ")
-            nombre_cuenta_modificado = self.entry_nombre_cuenta.get()
-            tipo_cuenta_modificado = self.combobox_tipo_cuenta.get()
+            item = self.treeview_cuentas.item(seleccion)
+            codigo_tipo_cuenta = item["values"][0]
+            codigo_cuenta = item["values"][1]
+            nombre_cuenta = item["values"][2]
 
-            if nombre_cuenta_modificado and tipo_cuenta_modificado:
-                cuenta_modificada = f"{nombre_cuenta_modificado} - {tipo_cuenta_modificado}"
-                self.cuentas[indice] = (nombre_cuenta_modificado, tipo_cuenta_modificado)
-                self.listbox_cuentas.delete(indice)
-                self.listbox_cuentas.insert(indice, cuenta_modificada)
-                self.entry_nombre_cuenta.delete(0, tk.END)
-                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido y seleccione un tipo de cuenta.")
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.entry_nombre_cuenta.insert(tk.END, nombre_cuenta)
+
+            # Seleccionar el tipo de cuenta correspondiente en el combobox
+            for index, opcion in enumerate(self.combobox_tipo_cuenta["values"]):
+                if opcion.startswith(codigo_tipo_cuenta):
+                    self.combobox_tipo_cuenta.current(index)
+                    break
+
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
         else:
-            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
-
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.combobox_tipo_cuenta.current(0)
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+    
     def eliminar_cuenta(self):
         seleccion = self.listbox_cuentas.curselection()
 
@@ -1049,7 +1070,7 @@ class VentanaIngresarCuenta(tk.Tk):
             messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
 
     def actualizar_botones(self, event):
-        seleccion = self.listbox_cuentas.curselection()
+        seleccion = self.treeview_cuentas.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
