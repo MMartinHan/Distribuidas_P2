@@ -542,7 +542,7 @@ class VentanaAgregarMotivo(tk.Tk):
             item = self.treeview_motivos.item(seleccion)
             codigo_actual = item['values'][0]
             codigo_actual = str(codigo_actual)
-            eliminarMotivo = "ELIMINAR|MOTIVO|"+codigo_actual
+            eliminarMotivo = "ELIMINAR|MOTIVO|CODIGO_MOT|"+codigo_actual
             mi_socket = crear_socket()
             mi_socket.send(eliminarMotivo.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -686,42 +686,46 @@ class VentanaAgregarEmpleado(tk.Tk):
         if seleccion:
             # Obtener los valores actuales del motivo seleccionado
             item = self.treeview_empleados.item(seleccion)
-            codigo_actual = item['values'][0]
             cedula_actual = item['values'][1]
-            nombre_actual = item['values'][2]
-            apellido_actual = item['values'][3]
-            fecha_actual = item['values'][4]
-            sueldo_actual = item['values'][5]
-            print(codigo_actual)
-            print(cedula_actual)
-            print(nombre_actual)
-            print(apellido_actual)
-            print(fecha_actual)
-            print(sueldo_actual)
-            '''codigo_actual = str(codigo_actual)
-            nuevo_nombre = self.entry_nombre_motivo.get()
-            modificarMotivo = "MODIFICAR|MOTIVO|"+nuevo_nombre+"|"+codigo_actual
+            codico_mot_nuevo = self.combo_motivo.get()
+            nombre_nuevo = self.entry_nombre.get()
+            apellido_nuevo = self.entry_apellido.get()
+            fecha_nuevo = self.entry_fecha.get()
+            sueldo_nuevo = self.entry_sueldo.get()
+            modificarMotivo = "MODIFICAR_EMPLEADO|EMPLEADO|"+codico_mot_nuevo[0]+"|"+nombre_nuevo+"|"+apellido_nuevo+"|"+fecha_nuevo+"|"+str(sueldo_nuevo)+"|"+str(cedula_actual)
+            print(modificarMotivo)
             mi_socket = crear_socket()
             mi_socket.send(modificarMotivo.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
             respuesta = respuesta.decode("utf-8")    
             mi_socket.close()
-            self.rellenar_tabla()'''
+            self.combo_motivo.set('')
+            self.entry_cedula.delete(0, tk.END)
+            self.entry_nombre.delete(0, tk.END)
+            self.entry_apellido.delete(0, tk.END)
+            self.entry_fecha.delete(0, tk.END)
+            self.entry_sueldo.delete(0, tk.END)
+            self.rellenar_tabla()
 
     def eliminar_empleado(self):
-        seleccion = self.listbox_empleados.curselection()
-
+        seleccion = self.treeview_empleados.selection()
         if seleccion:
-            indice = seleccion[0]
-            empleado = self.listbox_empleados.get(indice)
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar al empleado '{empleado}'?")
-
-            if confirmacion:
-                self.empleados.pop(indice)
-                self.listbox_empleados.delete(indice)
-                messagebox.showinfo("Información", "Empleado eliminado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un empleado para eliminar.")    
+            item = self.treeview_empleados.item(seleccion)
+            cedula_actual = item['values'][1]
+            cedula_actual = str(cedula_actual)
+            eliminarMotivo = "ELIMINAR|EMPLEADO|CEDULA_EMP|"+cedula_actual
+            mi_socket = crear_socket()
+            mi_socket.send(eliminarMotivo.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.combo_motivo.set('')
+            self.entry_cedula.delete(0, tk.END)
+            self.entry_nombre.delete(0, tk.END)
+            self.entry_apellido.delete(0, tk.END)
+            self.entry_fecha.delete(0, tk.END)
+            self.entry_sueldo.delete(0, tk.END)
+            self.rellenar_tabla()  
             
     def actualizar_botones(self, event):
         seleccion = self.treeview_empleados.selection()
