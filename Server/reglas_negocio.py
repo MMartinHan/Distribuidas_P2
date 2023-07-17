@@ -38,4 +38,4 @@ def aportePatronalPagar(sueldo):
     return sueldo * 0.1215
 
 def nominaPagar(sueldo):
-    return (sueldo+calcular13(sueldo)+calcular14(sueldo)+calcularGastoFondoReserva(sueldo)+calcularAportePatronal(sueldo))-(aportePersonalPagar(sueldo)+aportePatronalPagar(sueldo)+nominaPagar(sueldo))
+    return (sueldo+calcular13(sueldo)+calcular14(sueldo)+calcularGastoFondoReserva(sueldo)+calcularAportePatronal(sueldo))-(aportePersonalPagar(sueldo)+aportePatronalPagar(sueldo))
