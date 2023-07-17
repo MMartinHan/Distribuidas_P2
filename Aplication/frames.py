@@ -1766,6 +1766,7 @@ class VentanaIngresarAsiento(tk.Tk):
             observacion = self.entry_observacion_asiento.get()
             for i in self.treeview_asiento.get_children():
                 mi_socket = crear_socket()
+                print(self.treeview_asiento.item(i, "values")[0])
                 consultaCuenta = "OBTENER_CODIGO_TC|TIPO_CUENTA|CODIGO_TC|"+self.treeview_asiento.item(i, "values")[0]
                 mi_socket.send(consultaCuenta.encode("utf-8"))
                 data = b''
