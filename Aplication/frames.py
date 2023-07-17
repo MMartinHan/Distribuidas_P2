@@ -147,27 +147,28 @@ class VentanaAgregarCandidato(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        self.geometry("600x400")
+        self.geometry("1000x500")
         self.candidatos = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
-        self.label_cedula = tk.Label(self.master, text="Cédula:")
+        self.label_cedula = tk.Label(self.master, text="Cédula del candidato:")
         self.label_cedula.pack()
         self.entry_cedula = tk.Entry(self.master)
         self.entry_cedula.pack()
 
-        self.label_nombre = tk.Label(self.master, text="Nombre:")
+        self.label_nombre = tk.Label(self.master, text="Nombre del candidato:")
         self.label_nombre.pack()
         self.entry_nombre = tk.Entry(self.master)
         self.entry_nombre.pack()
 
-        self.label_apellido = tk.Label(self.master, text="Apellido:")
+        self.label_apellido = tk.Label(self.master, text="Apellido del candidato:")
         self.label_apellido.pack()
         self.entry_apellido = tk.Entry(self.master)
         self.entry_apellido.pack()
 
-        self.label_fecha_nacimiento = tk.Label(self.master, text="Fecha de Nacimiento:")
+        self.label_fecha_nacimiento = tk.Label(self.master, text="Fecha de Nacimiento del candidato:")
         self.label_fecha_nacimiento.pack()
         self.entry_fecha_nacimiento = tk.Entry(self.master)
         self.entry_fecha_nacimiento.pack()
@@ -178,8 +179,16 @@ class VentanaAgregarCandidato(tk.Tk):
         self.label_candidatos_guardados = tk.Label(self.master, text="Candidatos Guardados:")
         self.label_candidatos_guardados.pack()
 
-        self.listbox_candidatos = tk.Listbox(self.master)
-        self.listbox_candidatos.pack()
+        self.treeview_candidatos = ttk.Treeview(self.master, columns=("cedula", "nombre", "apellido", "fechaNacimiento"), show="headings")
+        self.treeview_candidatos.heading("cedula", text="Cedula")
+        self.treeview_candidatos.heading("nombre", text="Nombre")
+        self.treeview_candidatos.heading("apellido", text="Apellido")
+        self.treeview_candidatos.heading("fechaNacimiento", text="Fecha nacimiento")
+        self.treeview_candidatos.column("cedula", anchor=tk.CENTER)
+        self.treeview_candidatos.column("nombre", anchor=tk.CENTER)
+        self.treeview_candidatos.column("apellido", anchor=tk.CENTER)
+        self.treeview_candidatos.column("fechaNacimiento", anchor=tk.CENTER)
+        self.treeview_candidatos.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_candidato)
         self.btn_modificar.pack(side=tk.LEFT)
@@ -187,101 +196,126 @@ class VentanaAgregarCandidato(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_candidato)
         self.btn_eliminar.pack(side=tk.LEFT)
 
-        self.listbox_candidatos.bind("<<ListboxSelect>>", self.actualizar_botones)
+        self.treeview_candidatos.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack()
+        self.btn_regresar.pack(side=tk.RIGHT)
 
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaCandidatos = "CONSULTAR_CAN|CANDIDATO|*"
+        mi_socket.send(consultaCandidatos.encode("utf-8"))
+        self.treeview_candidatos.delete(*self.treeview_candidatos.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for candidato in data_decoded:
+            self.treeview_candidatos.insert('', 'end', values=candidato)
+        mi_socket.close()
+        
     def mover_inicio(self):
         cerrar_ventana(self)
-        abrir_ventana(VentanaSeleccion)
+        abrir_ventana(VentanaSeleccion) 
 
     def guardar_candidato(self):
-        cedula = self.entry_cedula.get()
-        nombre = self.entry_nombre.get()
-        apellido = self.entry_apellido.get()
-        fecha_nacimiento = self.entry_fecha_nacimiento.get()
-        id_candidato = sm.generar_id_candidato()
-        ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})|"
-        id_candidato = sm.generar_id()
-        ingresoCandidato = f"INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHA_NAC_CAN)|({cedula},{nombre},{apellido},{fecha_nacimiento})"
-        print(ingresoCandidato)
+        cedula_candidato = self.entry_cedula.get()
+        nombre_candidato = self.entry_nombre.get()
+        apellido_candidato = self.entry_apellido.get()
+        fechaNacimiento_candidato = self.entry_fecha_nacimiento.get()
+        ingresoCandidato = "INGRESAR|CANDIDATO|(CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHANACIMIENTO_CAN)|"+str(cedula_candidato)+","+str(nombre_candidato)+","+str(apellido_candidato)+","+str(fechaNacimiento_candidato)
         mi_socket = crear_socket()
         mi_socket.send(ingresoCandidato.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
+        respuesta = respuesta.decode("utf-8")
         print(respuesta)
         mi_socket.close()
-
-        if cedula and nombre and apellido and fecha_nacimiento:
-            self.candidatos.append((cedula, nombre, apellido, fecha_nacimiento))
-            self.listbox_candidatos.insert(tk.END, f"{cedula} - {nombre} {apellido}")
-            self.entry_cedula.delete(0, tk.END)
-            self.entry_nombre.delete(0, tk.END)
-            self.entry_apellido.delete(0, tk.END)
-            self.entry_fecha_nacimiento.delete(0, tk.END)
-            messagebox.showinfo("Información", "Candidato guardado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Ingrese todos los datos del candidato.")
-
+        
+        self.entry_cedula.delete(0, 'end')  # Borrar contenido del campo de entrada
+        self.entry_nombre.delete(0, 'end')
+        self.entry_apellido.delete(0, 'end')
+        self.entry_fecha_nacimiento.delete(0, 'end')
+        self.rellenar_tabla()
+        
+        
     def modificar_candidato(self):
-        seleccion = self.listbox_candidatos.curselection()
-
+        seleccion = self.treeview_candidatos.selection()
         if seleccion:
-            indice = seleccion[0]
-            cedula_actual, nombre_actual, apellido_actual, fecha_nacimiento_actual = self.candidatos[indice]
-            cedula_modificada = self.entry_cedula.get()
-            nombre_modificado = self.entry_nombre.get()
-            apellido_modificado = self.entry_apellido.get()
-            fecha_nacimiento_modificada = self.entry_fecha_nacimiento.get()
-
-            if cedula_modificada and nombre_modificado and apellido_modificado and fecha_nacimiento_modificada:
-                self.candidatos[indice] = (cedula_modificada, nombre_modificado, apellido_modificado, fecha_nacimiento_modificada)
-                self.listbox_candidatos.delete(indice)
-                self.listbox_candidatos.insert(indice, f"{cedula_modificada} - {nombre_modificado} {apellido_modificado}")
-                self.entry_cedula.delete(0, tk.END)
-                self.entry_nombre.delete(0, tk.END)
-                self.entry_apellido.delete(0, tk.END)
-                self.entry_fecha_nacimiento.delete(0, tk.END)
-                messagebox.showinfo("Información", "Candidato modificado exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese todos los datos del candidato.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un candidato para modificar.")
+            # Obtener los valores actuales del motivo seleccionado
+            item = self.treeview_candidatos.item(seleccion)
+            cedula_actual = item['values'][0]
+            nuevo_nombre = self.entry_nombre.get()
+            nuevo_apellido = self.entry_apellido.get()
+            nuevo_fechaNacimiento = self.entry_fecha_nacimiento.get()
+            modificarCandidato = "MODIFICAR_CAN|CANDIDATO|"+nuevo_nombre+"|"+nuevo_apellido+"|"+nuevo_fechaNacimiento+"|"+str(cedula_actual)
+            mi_socket = crear_socket()
+            mi_socket.send(modificarCandidato.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.entry_cedula.delete(0, 'end')  # Borrar contenido del campo de entrada
+            self.entry_nombre.delete(0, 'end')
+            self.entry_apellido.delete(0, 'end')
+            self.entry_fecha_nacimiento.delete(0, 'end')
+            self.rellenar_tabla()
 
     def eliminar_candidato(self):
-        seleccion = self.listbox_candidatos.curselection()
-
+        seleccion = self.treeview_candidatos.selection()
         if seleccion:
-            indice = seleccion[0]
-            cedula, nombre, apellido, fecha_nacimiento = self.candidatos[indice]
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el candidato '{cedula} - {nombre} {apellido}'?")
-
-            if confirmacion:
-                self.candidatos.pop(indice)
-                self.listbox_candidatos.delete(indice)
-                messagebox.showinfo("Información", "Candidato eliminado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un candidato para eliminar.")
-
+            item = self.treeview_candidatos.item(seleccion)
+            cedula_actual = item['values'][0]
+            cedula_actual = str(cedula_actual)
+            eliminarCandidato = "ELIMINAR_CAN|CANDIDATO|"+cedula_actual
+            mi_socket = crear_socket()
+            mi_socket.send(eliminarCandidato.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            
+            self.entry_cedula.delete(0, 'end')  # Borrar contenido del campo de entrada
+            self.entry_nombre.delete(0, 'end')
+            self.entry_apellido.delete(0, 'end')
+            self.entry_fecha_nacimiento.delete(0, 'end')
+            self.rellenar_tabla()
+            
     def actualizar_botones(self, event):
-        seleccion = self.listbox_candidatos.curselection()
+        seleccion = self.treeview_candidatos.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
             self.btn_eliminar.config(state=tk.NORMAL)
+            indice = seleccion[0]
+            candidato = self.treeview_candidatos.item(indice)['values']
+            print(candidato)
+            self.entry_cedula.delete(0, tk.END)
+            self.entry_cedula.insert(tk.END, candidato[0])
+            self.entry_nombre.delete(0, tk.END)
+            self.entry_nombre.insert(tk.END, candidato[1])
+            self.entry_apellido.delete(0, tk.END)
+            self.entry_apellido.insert(tk.END, candidato[2])
+            self.entry_fecha_nacimiento.delete(0, tk.END)
+            self.entry_fecha_nacimiento.insert(tk.END, candidato[3])
         else:
             self.btn_modificar.config(state=tk.DISABLED)
-            self.btn_eliminar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED) 
 
 class VentanaAgregarParametro(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        self.geometry("600x400")
+        self.geometry("900x500")
         self.parametros = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
+        self.label_candidato = tk.Label(self.master, text="Escoja al candidato")
+        self.label_candidato.pack()
+        op = self.rellenar_combobox()
+        opcion_seleccionada = tk.StringVar()
+        self.combo_candidato = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
+        self.combo_candidato.pack()
+        
         self.label_nombre_parametro = tk.Label(self.master, text="Nombre del parámetro:")
         self.label_nombre_parametro.pack()
         self.entry_nombre_parametro = tk.Entry(self.master)
@@ -298,8 +332,16 @@ class VentanaAgregarParametro(tk.Tk):
         self.label_parametros_guardados = tk.Label(self.master, text="Parámetros Guardados:")
         self.label_parametros_guardados.pack()
 
-        self.listbox_parametros = tk.Listbox(self.master)
-        self.listbox_parametros.pack()
+        self.treeview_parametros = ttk.Treeview(self.master, columns=("candidato", "codigo", "nombre", "puntaje"), show="headings")
+        self.treeview_parametros.heading("candidato", text="Candidato")
+        self.treeview_parametros.heading("codigo", text="Código")
+        self.treeview_parametros.heading("nombre", text="Nombre")
+        self.treeview_parametros.heading("puntaje", text="Puntaje")
+        self.treeview_parametros.column("candidato", anchor=tk.CENTER)
+        self.treeview_parametros.column("codigo", anchor=tk.CENTER)
+        self.treeview_parametros.column("nombre", anchor=tk.CENTER)
+        self.treeview_parametros.column("puntaje", anchor=tk.CENTER)
+        self.treeview_parametros.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_parametro)
         self.btn_modificar.pack(side=tk.LEFT)
@@ -307,78 +349,106 @@ class VentanaAgregarParametro(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_parametro)
         self.btn_eliminar.pack(side=tk.LEFT)
 
-        self.listbox_parametros.bind("<<ListboxSelect>>", self.actualizar_botones)
+        self.treeview_parametros.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack()
 
+    def rellenar_combobox(self):
+        opciones = sm.consultar_candidatos()
+        return opciones
+    
     def mover_inicio(self):
-        self.master.destroy()
-        VentanaSeleccion(self.master)
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
+    
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaParametros = "CONSULTAR_PARAMETRO|PARAMETROEVALUACION|*"
+        mi_socket.send(consultaParametros.encode("utf-8"))
+        self.treeview_parametros.delete(*self.treeview_parametros.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_parametros.insert('', 'end', values=motivo)
+        mi_socket.close()
 
     def guardar_parametro(self):
+        candidato = self.combo_candidato.get()
         nombre_parametro = self.entry_nombre_parametro.get()
         puntaje_maximo = self.entry_puntaje_maximo.get()
+        id = sm.generar_id_parametroEvaluacion()
+        ingresoParametro = "INGRESAR|PARAMETROEVALUACION|(CEDULA_CAN,CODIGO_PEV,NOMBRE_PEV,PUNTAJEMAXIMO_PEV)|"+ str(candidato) + ", " + id + ", "+ str(nombre_parametro) +", " + str(puntaje_maximo)
+        print(ingresoParametro)
+        mi_socket = crear_socket()
+        mi_socket.send(ingresoParametro.encode("utf-8"))
+        respuesta = mi_socket.recv(1024)
+        respuesta = respuesta.decode("utf-8")
+        print(respuesta)
+        mi_socket.close()
         
-        if  nombre_parametro and puntaje_maximo:
-            id = sm.generar_id_parametroEvaluacion()
-            ingresoParametro = f"INGRESAR|PARAMETROEVALUACION|(CODIGO_PEV,NOMBRE_PEV,PUNTAJE_MAX)|({id},{nombre_parametro},{puntaje_maximo})|"
-            print(ingresoParametro)
-            mi_socket = crear_socket()
-            mi_socket.send(ingresoParametro.encode("utf-8"))
-            respuesta = mi_socket.recv(1024)
-            print(respuesta)
-            mi_socket.close()
-            self.parametros.append((nombre_parametro, puntaje_maximo))
-            self.listbox_parametros.insert(tk.END, f"{nombre_parametro} - {puntaje_maximo}")
-            self.entry_nombre_parametro.delete(0, tk.END)
-            self.entry_puntaje_maximo.delete(0, tk.END)
-            messagebox.showinfo("Información", "Parámetro guardado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Por favor, complete todos los campos.")
-
+        self.combo_candidato.set('')  # Borrar contenido del campo de entrada
+        self.entry_nombre_parametro.delete(0, 'end')  
+        self.entry_puntaje_maximo.delete(0, 'end')  
+        self.rellenar_tabla()
+        
+        
     def modificar_parametro(self):
-        seleccion = self.listbox_parametros.curselection()
+        seleccion = self.treeview_parametros.selection()
 
         if seleccion:
-            indice = seleccion[0]
-            parametro_actual = self.parametros[indice]
-            nombre_parametro = self.entry_nombre_parametro.get()
-            puntaje_maximo = self.entry_puntaje_maximo.get()
-
-            if nombre_parametro and puntaje_maximo:
-                self.parametros[indice] = (nombre_parametro, puntaje_maximo)
-                self.listbox_parametros.delete(indice)
-                self.listbox_parametros.insert(indice, f"{nombre_parametro} - {puntaje_maximo}")
-                self.entry_nombre_parametro.delete(0, tk.END)
-                self.entry_puntaje_maximo.delete(0, tk.END)
-                messagebox.showinfo("Información", "Parámetro modificado exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese valores válidos para todos los campos.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un parámetro para modificar.")
-
+            # Obtener los valores actuales del motivo seleccionado
+            item = self.treeview_parametros.item(seleccion)
+            codigo_actual = item['values'][1]
+            candidato_nuevo = self.combo_candidato.get()
+            nombre_nuevo = self.entry_nombre_parametro.get()
+            puntaje_nuevo = self.entry_puntaje_maximo.get()
+            modificarParametro = "MODIFICAR_PARAMETRO|PARAMETROEVALUACION|"+str(candidato_nuevo)+"|"+nombre_nuevo+"|"+str(puntaje_nuevo)+"|"+str(codigo_actual)
+            print(modificarParametro)
+            mi_socket = crear_socket()
+            mi_socket.send(modificarParametro.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.combo_candidato.set('')  # Borrar contenido del campo de entrada
+            self.entry_nombre_parametro.delete(0, 'end')  
+            self.entry_puntaje_maximo.delete(0, 'end') 
+            self.rellenar_tabla()
+    
     def eliminar_parametro(self):
-        seleccion = self.listbox_parametros.curselection()
-
+        seleccion = self.treeview_parametros.selection()
         if seleccion:
-            indice = seleccion[0]
-            parametro = self.parametros[indice]
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar el parámetro '{parametro[0]}'?")
-
-            if confirmacion:
-                self.parametros.pop(indice)
-                self.listbox_parametros.delete(indice)
-                messagebox.showinfo("Información", "Parámetro eliminado exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione un parámetro para eliminar.")
-
+            item = self.treeview_parametros.item(seleccion)
+            codigo_actual = item['values'][1]
+            codigo_actual = str(codigo_actual)
+            eliminarMotivo = "ELIMINAR|PARAMETROEVALUACION|CODIGO_PEV|"+codigo_actual
+            mi_socket = crear_socket()
+            mi_socket.send(eliminarMotivo.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.combo_candidato.set('')  # Borrar contenido del campo de entrada
+            self.entry_nombre_parametro.delete(0, 'end')  
+            self.entry_puntaje_maximo.delete(0, 'end') 
+            self.rellenar_tabla()
+              
     def actualizar_botones(self, event):
-        seleccion = self.listbox_parametros.curselection()
+        seleccion = self.treeview_parametros.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
             self.btn_eliminar.config(state=tk.NORMAL)
+            indice = seleccion[0]
+            parametro = self.treeview_parametros.item(indice)['values']
+            print(parametro)
+            self.combo_candidato.set('')
+            self.combo_candidato.set(parametro[0])
+            self.entry_nombre_parametro.delete(0, tk.END)
+            self.entry_nombre_parametro.insert(tk.END, parametro[2])
+            self.entry_puntaje_maximo.delete(0, tk.END)
+            self.entry_puntaje_maximo.insert(tk.END, parametro[3])
         else:
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
@@ -879,7 +949,7 @@ class VentanaAgregarEmpleado(tk.Tk):
 
     def create_widgets(self):
         
-        self.label_motivo = tk.Label(self.master, text="Escoga el motivo")
+        self.label_motivo = tk.Label(self.master, text="Escoja el motivo")
         self.label_motivo.pack()
         op = self.rellenar_combobox()
         opcion_seleccionada = tk.StringVar()
@@ -1264,6 +1334,7 @@ class VentanaIngresarCuenta(tk.Tk):
         self.cuentas = []
         self.tipos_cuenta = []
         self.create_widgets()
+        self.rellenar_tabla()
 
     def create_widgets(self):
         self.label_nombre_cuenta = tk.Label(self.master, text="Nombre de la Cuenta:")
@@ -1283,9 +1354,10 @@ class VentanaIngresarCuenta(tk.Tk):
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
 
-        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo", "nombre"), show="headings")
-        self.treeview_cuentas.heading("codigo", text="Código")
-        self.treeview_cuentas.heading("nombre", text="Nombre")
+        self.treeview_cuentas = ttk.Treeview(self.master, columns=("codigo_tipo", "codigo_cuenta", "nombre_cuenta"), show="headings")
+        self.treeview_cuentas.heading("codigo_tipo", text="CódigoTipoCuenta")
+        self.treeview_cuentas.heading("codigo_cuenta", text="CódigoCuenta")
+        self.treeview_cuentas.heading("nombre_cuenta", text="NombreCuenta")
         self.treeview_cuentas.pack()
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
@@ -1299,6 +1371,19 @@ class VentanaIngresarCuenta(tk.Tk):
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_atras)
         self.btn_regresar.pack(side=tk.RIGHT)
 
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaMotivos = "CONSULTAR|CUENTA|*"
+        mi_socket.send(consultaMotivos.encode("utf-8"))
+        self.treeview_cuentas.delete(*self.treeview_cuentas.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_cuentas.insert('', 'end', values=motivo)
+        mi_socket.close()
+
     def mover_atras(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaCuenta)
@@ -1306,12 +1391,14 @@ class VentanaIngresarCuenta(tk.Tk):
     def guardar_cuenta(self):
         nombre_cuenta = self.entry_nombre_cuenta.get()
         tipo_cuenta = self.combobox_tipo_cuenta.get()
-        print(nombre_cuenta)
-        print(type(nombre_cuenta))
-        print(tipo_cuenta)
-        print(type(tipo_cuenta))
+        tipo_cuenta = tipo_cuenta.split(" ")
+        idTipoCuenta = tipo_cuenta[0]
         id = cm.generar_id_cuenta()
-        ingresarCuenta = "INGRESAR|CUENTA|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|("+id+","+nombre_cuenta+")"
+        ingresarCuenta = "INGRESAR|CUENTA|(CODIGO_TC,CODIGO_CUE,NOMBRE_CUE)|"+idTipoCuenta+","+id+","+nombre_cuenta
+        mi_socket = crear_socket()
+        mi_socket.send(ingresarCuenta.encode("utf-8"))
+        respuesta = mi_socket.recv(1024).decode("utf-8")
+        mi_socket.close()
         print(ingresarCuenta)
         if nombre_cuenta and tipo_cuenta:
             self.cuentas.append((nombre_cuenta, tipo_cuenta))
@@ -1323,27 +1410,31 @@ class VentanaIngresarCuenta(tk.Tk):
             messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta y seleccione un tipo de cuenta.")
 
     def modificar_cuenta(self):
-        seleccion = self.listbox_cuentas.curselection()
+        seleccion = self.treeview_cuentas.selection()
 
         if seleccion:
-            indice = seleccion[0]
-            cuenta_actual = self.listbox_cuentas.get(indice)
-            nombre_cuenta_actual, tipo_cuenta_actual = cuenta_actual.split(" - ")
-            nombre_cuenta_modificado = self.entry_nombre_cuenta.get()
-            tipo_cuenta_modificado = self.combobox_tipo_cuenta.get()
+            item = self.treeview_cuentas.item(seleccion)
+            codigo_tipo_cuenta = item["values"][0]
+            codigo_cuenta = item["values"][1]
+            nombre_cuenta = item["values"][2]
 
-            if nombre_cuenta_modificado and tipo_cuenta_modificado:
-                cuenta_modificada = f"{nombre_cuenta_modificado} - {tipo_cuenta_modificado}"
-                self.cuentas[indice] = (nombre_cuenta_modificado, tipo_cuenta_modificado)
-                self.listbox_cuentas.delete(indice)
-                self.listbox_cuentas.insert(indice, cuenta_modificada)
-                self.entry_nombre_cuenta.delete(0, tk.END)
-                messagebox.showinfo("Información", "Cuenta modificada exitosamente.")
-            else:
-                messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta válido y seleccione un tipo de cuenta.")
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.entry_nombre_cuenta.insert(tk.END, nombre_cuenta)
+
+            # Seleccionar el tipo de cuenta correspondiente en el combobox
+            for index, opcion in enumerate(self.combobox_tipo_cuenta["values"]):
+                if opcion.startswith(codigo_tipo_cuenta):
+                    self.combobox_tipo_cuenta.current(index)
+                    break
+
+            self.btn_modificar.config(state=tk.NORMAL)
+            self.btn_eliminar.config(state=tk.NORMAL)
         else:
-            messagebox.showwarning("Advertencia", "Seleccione una cuenta para modificar.")
-
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.combobox_tipo_cuenta.current(0)
+            self.btn_modificar.config(state=tk.DISABLED)
+            self.btn_eliminar.config(state=tk.DISABLED)
+    
     def eliminar_cuenta(self):
         seleccion = self.listbox_cuentas.curselection()
 
@@ -1360,7 +1451,7 @@ class VentanaIngresarCuenta(tk.Tk):
             messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
 
     def actualizar_botones(self, event):
-        seleccion = self.listbox_cuentas.curselection()
+        seleccion = self.treeview_cuentas.selection()
 
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)

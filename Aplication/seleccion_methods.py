@@ -1,57 +1,35 @@
 from db import conexion
+import socket
+import pickle
+
+def crear_socket():
+    mi_socket = socket.socket()
+    mi_socket.connect(('localhost', 8000))
+    return mi_socket
     
-def generar_id_candidato():
-    cursor = conexion.cursor()
-    sql = "SELECT MAX(CEDULA_CAN) FROM CANDIDATO"
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    if result[0] is None:
-        id = "CAN01"
-    else:
-        letras = ""
-        numeros = ""
-        for i in result[0]:
-            if i.isalpha():
-                letras += i
-            else:
-                numeros += i
-
-        if numeros[0] == "0":
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            nuevo = "0" + nuevo
-            id = letras + nuevo
-        else:
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            id = letras + nuevo
-    return id
-
 def generar_id_parametroEvaluacion():
-    cursor = conexion.cursor()
-    sql = "SELECT MAX(CODIGO_PEV) FROM PARAMETROEVALUACION"
-    cursor.execute(sql)
-    result = cursor.fetchone()
-
-    if result[0] is None:
-        id = "PEV01"
+    mi_socket = crear_socket()
+    consultaParametros = "CONSULTAR_PARAMETROEVALUACION|PARAMETROEVALUACION|MAX(CODIGO_PEV)"
+    mi_socket.send(consultaParametros.encode("utf-8"))
+    result = mi_socket.recv(1024).decode("utf-8")
+    result = str(result)
+    print(result)
+    if result == "None":
+        id = "1"  
     else:
-        letras = ""
-        numeros = ""
-        for i in result[0]:
-            if i.isalpha():
-                letras += i
-            else:
-                numeros += i
-
-        if numeros[0] == "0":
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            nuevo = "0" + nuevo
-            id = letras + nuevo
-        else:
-            cambio = int(numeros) + 1
-            nuevo = str(cambio)
-            id = letras + nuevo
+        result = result[1:-1]
+        id = int(result)
+        id += 1
+        id = str(id)
     return id
+
+def consultar_candidatos():
+    mi_socket = crear_socket()
+    consultaCandidatos = "OBTENER_CANDIDATO|CANDIDATO|CEDULA_CAN,NOMBRE_CAN,APELLIDO_CAN,FECHANACIMIENTO_CAN"
+    mi_socket.send(consultaCandidatos.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    print(data)
+    data_decoded = pickle.loads(data)
+    print(data_decoded)
+    return data_decoded
