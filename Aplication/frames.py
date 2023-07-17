@@ -799,14 +799,8 @@ class VentanaCuenta(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=20)
         
-        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Ingresar asiento contable", command=self.agregarAsiento)
+        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Asientos contables", command=self.agregarAsiento)
         self.boton_opcion_8.pack(side="left", padx=10)
-        self.boton_opcion_9 = tk.Button(self.frame_contenedor, text="Modificar asiento contable")
-        self.boton_opcion_9.pack(side="left", padx=10)
-        self.boton_opcion_10 = tk.Button(self.frame_contenedor, text="Eliminar asiento contable")
-        self.boton_opcion_10.pack(side="left", padx=10)
-        self.boton_opcion_11 = tk.Button(self.frame_contenedor, text="Consultar asiento contable")
-        self.boton_opcion_11.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
         self.etiqueta_opciones.pack()
@@ -836,7 +830,7 @@ class VentanaCuenta(tk.Tk):
 
     def agregarAsiento(self):
         cerrar_ventana(self)
-        abrir_ventana(VentanaAgregarAsiento)
+        abrir_ventana(VentanaAsiento)
 
 class VentanaIngresarTipoCuenta(tk.Tk):
     def __init__(self, master=None):
@@ -1023,55 +1017,43 @@ class VentanaIngresarCuenta(tk.Tk):
         respuesta = mi_socket.recv(1024).decode("utf-8")
         mi_socket.close()
         print(ingresarCuenta)
-        if nombre_cuenta and tipo_cuenta:
-            self.cuentas.append((nombre_cuenta, tipo_cuenta))
-            cuenta_text = f"{nombre_cuenta} - {tipo_cuenta}"
-            self.treeview_cuentas.insert("", tk.END, values=(nombre_cuenta, tipo_cuenta))
-            self.entry_nombre_cuenta.delete(0, tk.END)
-            messagebox.showinfo("Información", "Cuenta guardada exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Ingrese un nombre de cuenta y seleccione un tipo de cuenta.")
-
+        self.rellenar_tabla()
     def modificar_cuenta(self):
         seleccion = self.treeview_cuentas.selection()
 
         if seleccion:
+            # Obtener los valores actuales del motivo seleccionado
             item = self.treeview_cuentas.item(seleccion)
-            codigo_tipo_cuenta = item["values"][0]
-            codigo_cuenta = item["values"][1]
-            nombre_cuenta = item["values"][2]
-
+            cuenta_actual = item['values'][1]
+            codigo_tc_nuevo = self.combobox_tipo_cuenta.get()
+            nombre_cuenta_nuevo = self.entry_nombre_cuenta.get()
+            modificarCuenta = "MODIFICAR_CUENTA|CUENTA|"+codigo_tc_nuevo[0]+"|"+str(cuenta_actual)+"|"+nombre_cuenta_nuevo
+            print(modificarCuenta)
+            mi_socket = crear_socket()
+            mi_socket.send(modificarCuenta.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8") 
+            print(respuesta)   
+            mi_socket.close()
+            self.combobox_tipo_cuenta.set('')
             self.entry_nombre_cuenta.delete(0, tk.END)
-            self.entry_nombre_cuenta.insert(tk.END, nombre_cuenta)
-
-            # Seleccionar el tipo de cuenta correspondiente en el combobox
-            for index, opcion in enumerate(self.combobox_tipo_cuenta["values"]):
-                if opcion.startswith(codigo_tipo_cuenta):
-                    self.combobox_tipo_cuenta.current(index)
-                    break
-
-            self.btn_modificar.config(state=tk.NORMAL)
-            self.btn_eliminar.config(state=tk.NORMAL)
-        else:
-            self.entry_nombre_cuenta.delete(0, tk.END)
-            self.combobox_tipo_cuenta.current(0)
-            self.btn_modificar.config(state=tk.DISABLED)
-            self.btn_eliminar.config(state=tk.DISABLED)
+            self.rellenar_tabla()
     
     def eliminar_cuenta(self):
-        seleccion = self.listbox_cuentas.curselection()
-
+        seleccion = self.treeview_cuentas.selection()
         if seleccion:
-            indice = seleccion[0]
-            cuenta = self.listbox_cuentas.get(indice)
-            confirmacion = messagebox.askyesno("Confirmación", f"¿Está seguro que desea eliminar la cuenta '{cuenta}'?")
-
-            if confirmacion:
-                self.cuentas.pop(indice)
-                self.listbox_cuentas.delete(indice)
-                messagebox.showinfo("Información", "Cuenta eliminada exitosamente.")
-        else:
-            messagebox.showwarning("Advertencia", "Seleccione una cuenta para eliminar.")
+            item = self.treeview_cuentas.item(seleccion)
+            cuenta_actual = item['values'][1]
+            cuenta_actual = str(cuenta_actual)
+            eliminarCuenta = "ELIMINAR|CUENTA|CODIGO_CUE|"+cuenta_actual
+            mi_socket = crear_socket()
+            mi_socket.send(eliminarCuenta.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")    
+            mi_socket.close()
+            self.combobox_tipo_cuenta.set('')
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.rellenar_tabla()
 
     def actualizar_botones(self, event):
         seleccion = self.treeview_cuentas.selection()
@@ -1079,49 +1061,351 @@ class VentanaIngresarCuenta(tk.Tk):
         if seleccion:
             self.btn_modificar.config(state=tk.NORMAL)
             self.btn_eliminar.config(state=tk.NORMAL)
+            indice = seleccion[0]
+            cuenta = self.treeview_cuentas.item(indice)['values']
+            print(cuenta)
+            self.combobox_tipo_cuenta.set('')
+            self.combobox_tipo_cuenta.set(cuenta[0])
+            self.entry_nombre_cuenta.delete(0, tk.END)
+            self.entry_nombre_cuenta.insert(tk.END, cuenta[2])
+            
         else:
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
 
-class VentanaAgregarAsiento(tk.Tk):
+class VentanaAsiento(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Pantalla de agregar asiento")
-        self.geometry("600x400")
-        
-        self.etiqueta_motivo = tk.Label(self, text="Motivo")
-        self.etiqueta_motivo.pack()
-        
-        self.campo_motivo = tk.Entry(self)
-        self.campo_motivo.pack()
-        
-        self.etiqueta_monto = tk.Label(self, text="Monto")
-        self.etiqueta_monto.pack()
-        
-        self.campo_monto = tk.Entry(self)
-        self.campo_monto.pack()
-        
-        self.etiqueta_fecha = tk.Label(self, text="Fecha")
-        self.etiqueta_fecha.pack()
-        
-        self.campo_fecha = tk.Entry(self)
-        self.campo_fecha.pack()
-        
-        self.boton_guardar = tk.Button(self, text="Guardar", command=self.guardar_asiento)
-        self.boton_guardar.pack()
-        
+        self.title("Pantalla de asientos contables")
+        self.geometry("1050x400")
+
+        self.boton_ingresar_asiento = tk.Button(self, text="Ingresar asiento", command=self.ingresar_asiento)
+        self.boton_ingresar_asiento.pack(side=tk.TOP, pady=10)
+
+        self.label_asientos_contables = tk.Label(self, text="Asientos contables")
+        self.label_asientos_contables.pack(side=tk.TOP, pady=10)
+
+        self.treeview_asientos = ttk.Treeview(self.master, columns=("numero", "fecha", "observacion"), show="headings")
+        self.treeview_asientos.heading("numero", text="Número")
+        self.treeview_asientos.heading("fecha", text="Fecha")
+        self.treeview_asientos.heading("observacion", text="Observación")
+        self.treeview_asientos.pack()
+
+        self.boton_eliminar_asiento = tk.Button(self, text="Eliminar asiento", state=tk.DISABLED)
+        self.boton_eliminar_asiento.pack(side=tk.TOP, pady=10)
+
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
-        self.boton_regresar.pack()
-        
-    def guardar_asiento(self):
-        # Lógica para guardar el asiento
-        self.campo_motivo.delete(0, 'end')
-        self.campo_monto.delete(0, 'end')
-        self.campo_fecha.delete(0, 'end')
+        self.boton_regresar.pack(side=tk.BOTTOM, pady=10)
+
+        self.treeview_asientos.bind("<<TreeviewSelect>>", self.actualizar_botones)  # Agregado evento
+        self.treeview_asientos.bind("<<TreeviewDoubleClick>>", self.abrir_asiento)  # Agregado evento
+
+        self.llenar_tabla()
+
+    def abrir_asiento(self, event):  # Agregado parámetro de evento
+        seleccion = self.treeview_asientos.selection()
+        if seleccion:
+            item = self.treeview_asientos.item(seleccion)
+            numero_asiento = item['values'][0]
+            cerrar_ventana(self)
+            abrir_ventana(ventanaModificarAsiento)
+
+    def actualizar_botones(self, event):  # Agregado parámetro de evento
+        seleccion = self.treeview_asientos.selection()
+        if seleccion:
+            self.boton_eliminar_asiento.config(state=tk.NORMAL)
+        else:
+            self.boton_eliminar_asiento.config(state=tk.DISABLED)
+
+    def ingresar_asiento(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaIngresarAsiento)
 
     def mover_inicio(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaCuenta)
+
+    def llenar_tabla(self):
+        self.treeview_asientos.delete(*self.treeview_asientos.get_children())
+        mi_socket = crear_socket()
+        consultaAsientos = "OBTENER_ASIENTOS|COMPROBANTE|CODIGO_COM|FECHA_COM|OBSERVACIONES_COM"
+        mi_socket.send(consultaAsientos.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        
+        codigos_com = set()
+        for motivo in data_decoded:
+            codigo_com = motivo[1]  # Suponiendo que el código de "CODIGO_COM" está en la posición 1 de cada motivo
+            if codigo_com not in codigos_com:
+                self.treeview_asientos.insert('', 'end', values=motivo)
+                codigos_com.add(codigo_com)
+                
+        mi_socket.close()
+
+
+class VentanaIngresarAsiento(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de agregar asiento")
+        self.geometry("900x450")
+
+        self.label_cabecera_asiento = tk.Label(self, text="Cabecera del asiento")
+        self.label_numero_asiento = tk.Label(self, text="Número de asiento")
+        self.entry_numero_asiento = tk.Entry(self, state="normal")
+        id_asiento = cm.generar_id_asiento()
+        print(id_asiento)
+        print(type(id_asiento))
+        self.entry_numero_asiento.insert(0, id_asiento)
+        self.entry_numero_asiento.config(state="disabled")
+        self.label_fecha_asiento = tk.Label(self, text="Fecha de asiento")
+        self.entry_fecha_asiento = tk.Entry(self)
+        self.label_observacion_asiento = tk.Label(self, text="Observación de asiento")
+        self.entry_observacion_asiento = tk.Entry(self)
+        self.label_detalle_asiento = tk.Label(self, text="Detalle del asiento")
+        self.label_cuenta_asiento = tk.Label(self, text="Cuenta")
+        op = self.llenar_combobox_cuenta()
+        self.combobox_cuenta_asiento = ttk.Combobox(self, state="readonly", values=op)
+        self.label_debe_asiento = tk.Label(self, text="Debe o Haber")
+        op2 = ["Debe", "Haber"]
+        self.combobox_debe_asiento = ttk.Combobox(self, state="readonly", values=op2)
+        self.label_monto_cuenta = tk.Label(self, text="Monto")
+        self.entry_monto_cuenta = tk.Entry(self)
+        self.boton_agregar_cuenta = tk.Button(self, text="Agregar cuenta", command=self.agregar_cuenta)
+        self.treeview_asiento = ttk.Treeview(self.master, columns=("tipoCuenta", "cuenta", "debe", "haber"), show="headings")
+        self.treeview_asiento.heading("tipoCuenta", text="Tipo de cuenta")
+        self.treeview_asiento.heading("cuenta", text="Cuenta")
+        self.treeview_asiento.heading("debe", text="Debe")
+        self.treeview_asiento.heading("haber", text="Haber")
+        self.boton_modificar_cuenta = tk.Button(self, text="Modificar cuenta", state=tk.DISABLED, command=self.modificar_cuenta)
+        self.boton_eliminar_cuenta = tk.Button(self, text="Eliminar cuenta", state=tk.DISABLED, command=self.eliminar_cuenta)
+        self.boton_guardar_asiento = tk.Button(self, text="Guardar asiento", command=self.guardar_asiento)
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.treeview_asiento.bind("<<TreeviewSelect>>", self.actualizar_botones)
+
+        self.label_cabecera_asiento.grid(row=0, column=0, columnspan=4, pady=10)
+        self.label_numero_asiento.grid(row=1, column=0, sticky=tk.E, padx=10)
+        self.entry_numero_asiento.grid(row=1, column=1, sticky=tk.W, padx=10)
+        self.label_fecha_asiento.grid(row=1, column=2, sticky=tk.E, padx=10)
+        self.entry_fecha_asiento.grid(row=1, column=3, sticky=tk.W, padx=10)
+        self.label_observacion_asiento.grid(row=2, column=0, sticky=tk.E, padx=10)
+        self.entry_observacion_asiento.grid(row=2, column=1, columnspan=3, sticky=tk.W, padx=10)
+        self.label_detalle_asiento.grid(row=4, column=0, columnspan=4, pady=10)
+        self.label_cuenta_asiento.grid(row=5, column=0, pady=10)
+        self.combobox_cuenta_asiento.grid(row=5, column=1, pady=10)
+        self.label_debe_asiento.grid(row=5, column=2, pady=10)
+        self.combobox_debe_asiento.grid(row=5, column=3, pady=10)
+        self.label_monto_cuenta.grid(row=5, column=4, pady=10)
+        self.entry_monto_cuenta.grid(row=5, column=5, pady=10)
+        self.boton_agregar_cuenta.grid(row=5, column=6, pady=10)
+        self.treeview_asiento.grid(row=6, column=0, columnspan=7)
+        self.boton_modificar_cuenta.grid(row=7, column=0, columnspan=3, padx=10, pady=10)
+        self.boton_eliminar_cuenta.grid(row=7, column=1, columnspan=3, pady=10)
+        self.boton_guardar_asiento.grid(row=7, column=3, columnspan=7, pady=10)
+        self.boton_regresar.grid(row=7, column=5, columnspan=7, pady=10)
+
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAsiento)
+
+    def eliminar_cuenta(self):
+        seleccion = self.treeview_asiento.selection()
+        if seleccion:
+            self.treeview_asiento.delete(seleccion)
+            self.boton_modificar_cuenta.config(state=tk.DISABLED)
+            self.boton_eliminar_cuenta.config(state=tk.DISABLED)
+            self.combobox_cuenta_asiento.set("")
+            self.combobox_debe_asiento.set("")
+            self.entry_monto_cuenta.delete(0, tk.END)
+
+    def modificar_cuenta(self):
+        seleccion = self.treeview_asiento.selection()
+        if seleccion:
+            self.agregar_cuenta()
+            self.eliminar_cuenta()
+            self.combobox_cuenta_asiento.set("")
+            self.combobox_debe_asiento.set("")
+            self.boton_modificar_cuenta.config(state=tk.DISABLED)
+            self.boton_eliminar_cuenta.config(state=tk.DISABLED)
+            self.combobox_cuenta_asiento.set("")
+            self.combobox_debe_asiento.set("")
+            self.entry_monto_cuenta.delete(0, tk.END)
+
+    def guardar_asiento(self):
+        cantidad_debe = 0
+        cantidad_haber = 0
+        for i in self.treeview_asiento.get_children():
+            if self.treeview_asiento.item(i, "values")[2] != "0":
+                cantidad_debe += int(self.treeview_asiento.item(i, "values")[2])
+            elif self.treeview_asiento.item(i, "values")[3] != "0":
+                cantidad_haber += int(self.treeview_asiento.item(i, "values")[3])
+        mi_socket = crear_socket()
+        validacion = "VERIFICAR_ASIENTO|"+str(cantidad_debe)+"|"+str(cantidad_haber)
+        mi_socket.send(validacion.encode("utf-8"))
+        result = mi_socket.recv(1024)
+        mi_socket.close()
+        result = int.from_bytes(result, 'big')
+        result=bool(result)
+        if result == True:
+            codigo_comprobante = self.entry_numero_asiento.get()
+            fecha = self.entry_fecha_asiento.get()
+            observacion = self.entry_observacion_asiento.get()
+            for i in self.treeview_asiento.get_children():
+                mi_socket = crear_socket()
+                consultaCuenta = "OBTENER_CODIGO_TC|TIPO_CUENTA|CODIGO_TC|"+self.treeview_asiento.item(i, "values")[0]
+                mi_socket.send(consultaCuenta.encode("utf-8"))
+                data = b''
+                data += mi_socket.recv(1024)
+                result = pickle.loads(data)
+                print(result)
+                print(type(result))
+                mi_socket.close()
+                result = str(result)
+                result = result[3:-4]
+                codigo_tc = result
+                
+                mi_socket = crear_socket()
+                consultaCuenta = "OBTENER_CODIGO_CUENTA|CUENTA|CODIGO_CUE|"+self.treeview_asiento.item(i, "values")[1]
+                mi_socket.send(consultaCuenta.encode("utf-8"))
+                data = b''
+                data += mi_socket.recv(1024)
+                result = pickle.loads(data)
+                print(result)
+                print(type(result))
+                mi_socket.close()
+                result = str(result)
+                result = result[3:-4]
+                codigo_cuenta = result
+
+                debe = self.treeview_asiento.item(i, "values")[2]
+                haber = self.treeview_asiento.item(i, "values")[3]
+                ingresoAsiento = "INGRESAR|COMPROBANTE|(CODIGO_TC, CODIGO_CUE, CODIGO_COM, FECHA_COM, OBSERVACIONES_COM, CANTIDAD_DEBE_COM, CANTIDAD_HABER_COM)|"+str(codigo_tc)+","+str(codigo_cuenta)+","+str(codigo_comprobante)+","+str(fecha)+","+str(observacion)+","+str(debe)+","+str(haber)
+                mi_socket = crear_socket()
+                mi_socket.send(ingresoAsiento.encode("utf-8"))
+                result = mi_socket.recv(1024).decode("utf-8")
+                print(result)
+                print(ingresoAsiento)
+        else:
+            messagebox.showerror("Error", "El asiento no esta cuadrado")
+            return
+        print(result)
+        print(type(result))
+        pass
+
+    def llenar_combobox_cuenta(self):
+        opciones = cm.consultar_cuenta()
+        return opciones
+    
+    def actualizar_botones(self, event):
+        seleccion = self.treeview_asiento.selection()
+        if seleccion:
+            if self.treeview_asiento.item(seleccion, "values")[2] == "0":
+                self.combobox_debe_asiento.set("Haber")
+                self.entry_monto_cuenta.delete(0, tk.END)
+                self.entry_monto_cuenta.insert(0, self.treeview_asiento.item(seleccion, "values")[3])
+            elif self.treeview_asiento.item(seleccion, "values")[3] == "0":
+                self.combobox_debe_asiento.set("Debe")
+                self.entry_monto_cuenta.delete(0, tk.END)
+                self.entry_monto_cuenta.insert(0, self.treeview_asiento.item(seleccion, "values")[2])
+            string_buscado = self.treeview_asiento.item(seleccion, "values")[1]
+            opciones = self.llenar_combobox_cuenta()
+            for opcion in opciones:
+                if string_buscado in opcion:
+                    self.combobox_cuenta_asiento.set(opcion)
+
+            self.boton_modificar_cuenta.config(state=tk.NORMAL)
+            self.boton_eliminar_cuenta.config(state=tk.NORMAL)
+        else:
+            self.boton_modificar_cuenta.config(state=tk.DISABLED)
+            self.boton_eliminar_cuenta.config(state=tk.DISABLED)
+    
+    def vaciar_campos(self):
+        self.entry_monto_cuenta.delete(0, tk.END)
+        self.combobox_cuenta_asiento.set("")
+        self.combobox_debe_asiento.set("")
+
+    def agregar_cuenta(self):
+        tipo_cuenta = self.combobox_cuenta_asiento.get()
+        tipo_cuenta = tipo_cuenta.split(" ")
+        tc_id = tipo_cuenta[0]
+        id_cuenta = tipo_cuenta[1]
+        nombre_cuenta = tipo_cuenta[2]
+        mi_socket = crear_socket()
+        consultaCuenta = "OBTENER_NOMBRE_TC|TIPO_CUENTA|NOMBRE_TC|"+tc_id
+        mi_socket.send(consultaCuenta.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        result = pickle.loads(data)
+        mi_socket.close()
+        result = str(result)
+        result = result[3:-4]
+        if self.combobox_debe_asiento.get() == "Debe":
+            self.treeview_asiento.insert("", tk.END, values=(result, nombre_cuenta, self.entry_monto_cuenta.get(), 0))
+        elif self.combobox_debe_asiento.get() == "Haber":
+            self.treeview_asiento.insert("", tk.END, values=(result, nombre_cuenta, 0, self.entry_monto_cuenta.get()))
+        self.vaciar_campos()
+        pass
+
+class ventanaModificarAsiento(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de agregar asiento")
+        self.geometry("900x450")
+
+        self.label_cabecera_asiento = tk.Label(self, text="Cabecera del asiento")
+        self.label_numero_asiento = tk.Label(self, text="Número de asiento")
+        self.entry_numero_asiento = tk.Entry(self, state="normal")
+        id_asiento = cm.generar_id_asiento()
+        print(id_asiento)
+        print(type(id_asiento))
+        self.entry_numero_asiento.insert(0, id_asiento)
+        self.entry_numero_asiento.config(state="disabled")
+        self.label_fecha_asiento = tk.Label(self, text="Fecha de asiento")
+        self.entry_fecha_asiento = tk.Entry(self)
+        self.label_observacion_asiento = tk.Label(self, text="Observación de asiento")
+        self.entry_observacion_asiento = tk.Entry(self)
+        self.label_detalle_asiento = tk.Label(self, text="Detalle del asiento")
+        self.label_cuenta_asiento = tk.Label(self, text="Cuenta")
+        op = self.llenar_combobox_cuenta()
+        self.combobox_cuenta_asiento = ttk.Combobox(self, state="readonly", values=op)
+        self.label_debe_asiento = tk.Label(self, text="Debe o Haber")
+        op2 = ["Debe", "Haber"]
+        self.combobox_debe_asiento = ttk.Combobox(self, state="readonly", values=op2)
+        self.label_monto_cuenta = tk.Label(self, text="Monto")
+        self.entry_monto_cuenta = tk.Entry(self)
+        self.boton_agregar_cuenta = tk.Button(self, text="Agregar cuenta", command=self.agregar_cuenta)
+        self.treeview_asiento = ttk.Treeview(self.master, columns=("tipoCuenta", "cuenta", "debe", "haber"), show="headings")
+        self.treeview_asiento.heading("tipoCuenta", text="Tipo de cuenta")
+        self.treeview_asiento.heading("cuenta", text="Cuenta")
+        self.treeview_asiento.heading("debe", text="Debe")
+        self.treeview_asiento.heading("haber", text="Haber")
+        self.boton_modificar_cuenta = tk.Button(self, text="Modificar cuenta", state=tk.DISABLED, command=self.modificar_cuenta)
+        self.boton_eliminar_cuenta = tk.Button(self, text="Eliminar cuenta", state=tk.DISABLED, command=self.eliminar_cuenta)
+        self.boton_guardar_asiento = tk.Button(self, text="Guardar asiento", command=self.guardar_asiento)
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.treeview_asiento.bind("<<TreeviewSelect>>", self.actualizar_botones)
+
+        self.label_cabecera_asiento.grid(row=0, column=0, columnspan=4, pady=10)
+        self.label_numero_asiento.grid(row=1, column=0, sticky=tk.E, padx=10)
+        self.entry_numero_asiento.grid(row=1, column=1, sticky=tk.W, padx=10)
+        self.label_fecha_asiento.grid(row=1, column=2, sticky=tk.E, padx=10)
+        self.entry_fecha_asiento.grid(row=1, column=3, sticky=tk.W, padx=10)
+        self.label_observacion_asiento.grid(row=2, column=0, sticky=tk.E, padx=10)
+        self.entry_observacion_asiento.grid(row=2, column=1, columnspan=3, sticky=tk.W, padx=10)
+        self.label_detalle_asiento.grid(row=4, column=0, columnspan=4, pady=10)
+        self.label_cuenta_asiento.grid(row=5, column=0, pady=10)
+        self.combobox_cuenta_asiento.grid(row=5, column=1, pady=10)
+        self.label_debe_asiento.grid(row=5, column=2, pady=10)
+        self.combobox_debe_asiento.grid(row=5, column=3, pady=10)
+        self.label_monto_cuenta.grid(row=5, column=4, pady=10)
+        self.entry_monto_cuenta.grid(row=5, column=5, pady=10)
+        self.boton_agregar_cuenta.grid(row=5, column=6, pady=10)
+        self.treeview_asiento.grid(row=6, column=0, columnspan=7)
+        self.boton_modificar_cuenta.grid(row=7, column=0, columnspan=3, padx=10, pady=10)
+        self.boton_eliminar_cuenta.grid(row=7, column=1, columnspan=3, pady=10)
+        self.boton_guardar_asiento.grid(row=7, column=3, columnspan=7, pady=10)
+        self.boton_regresar.grid(row=7, column=5, columnspan=7, pady=10)
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
 ventana = VentanaLogin()

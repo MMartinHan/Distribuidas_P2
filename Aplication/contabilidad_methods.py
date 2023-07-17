@@ -25,12 +25,10 @@ def generar_id_tipo_cuenta():
     data += mi_socket.recv(1024)
     result = pickle.loads(data)
     result = str(result)
-    print(result)
     if result  == "None":
         id = "1"  
     else:
         result = result[1:-1]
-        print(result)
         id = int(result)
         id += 1
         id = str(id)
@@ -44,13 +42,45 @@ def generar_id_cuenta():
     data += mi_socket.recv(1024)
     result = pickle.loads(data)
     result = str(result)
+    result = result[3:-4]
     print(result)
-    if result == "None":
+    print(type(result))
+    if result == "on":
         id = "1"  
     else:
-        result = result[3:-4]
-        print(result)
         id = int(result)
         id += 1
         id = str(id)
     return id
+
+def generar_id_asiento():
+    mi_socket = crear_socket()
+    consultaMotivos = "CONSULTAR|COMPROBANTE|MAX(CODIGO_COM)"
+    mi_socket.send(consultaMotivos.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    result = pickle.loads(data)
+    result = str(result)
+    result = result[3:-4]
+    print(result)
+    print(type(result))
+    if result == "on":
+        id = "1"  
+    else:
+        id = int(result)
+        id += 1
+        id = str(id)
+    return id
+
+def consultar_cuenta():
+    mi_socket = crear_socket()
+    consultaCuenta = "OBTENER_CUENTA|CUENTA"
+    mi_socket.send(consultaCuenta.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    print(data)
+    result = pickle.loads(data)
+    print(result)
+    mi_socket.close()
+    return result
+

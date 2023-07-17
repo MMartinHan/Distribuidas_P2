@@ -1,6 +1,7 @@
 import socket
 import pickle
 import percistencia as per
+import reglas_negocio as rn
 
 mi_socket = socket.socket()
 mi_socket.bind(('localhost', 8000))
@@ -116,5 +117,51 @@ while True:
             conexion.send("Orden ejecutada con exito".encode("utf-8"))
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
-        
+    elif sql_query[0]=="MODIFICAR_CUENTA":
+        sql = "UPDATE "+sql_query[1]+" SET CODIGO_TC='"+sql_query[2]+"', NOMBRE_CUE='"+sql_query[4]+"' WHERE CODIGO_CUE="+sql_query[3]
+        if per.persistencia(sql) == True:
+            conexion.send("Orden ejecutada con exito".encode("utf-8"))
+        else:
+            conexion.send("Error al ejecutar la orden".encode("utf-8"))
+    elif sql_query[0]=="OBTENER_CUENTA":
+        print("Obtener cuenta")
+        sql = "SELECT * FROM " + sql_query[1]
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="OBTENER_NOMBRE_TC":
+        print("Obtener nombre tipo cuenta")
+        sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE CODIGO_TC=" + sql_query[3]
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="OBTENER_CODIGO_TC":
+        print("Obtener codigo tipo cuenta")
+        sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE NOMBRE_TC='" + sql_query[3] + "'"
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="OBTENER_CODIGO_CUENTA":
+        print("Obtener codigo tipo cuenta")
+        sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE NOMBRE_CUE='" + sql_query[3] + "'"
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="OBTENER_ASIENTOS":
+        print("Obtener asientos")
+        sql = "SELECT "+sql_query[2]+", "+sql_query[3]+", "+sql_query[4]+" FROM " + sql_query[1]
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="VERIFICAR_ASIENTO":
+        bandera = rn.verificar_asiento(sql_query[1], sql_query[2])
+        bandera = int(bandera)
+        conexion.send(bandera.to_bytes(1,'big'))
     conexion.close()
