@@ -187,16 +187,16 @@ class VentanaAgregarEvaluacion(tk.Tk):
         self.treeview_evaluacion.column("calificacion", anchor=tk.CENTER)
         self.treeview_evaluacion.pack()
 
-        self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_evaluacion)
+        self.btn_modificar = tk.Button(self.master, text="Modificar")
         self.btn_modificar.pack(side=tk.LEFT)
 
-        self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_evaluacion)
+        self.btn_eliminar = tk.Button(self.master, text="Eliminar")
         self.btn_eliminar.pack(side=tk.LEFT)
 
-        self.treeview_evaluacion.bind("<<TreeviewSelect>>", self.actualizar_botones)
+        self.treeview_evaluacion.bind("<<TreeviewSelect>>")
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack(side=tk.RIGHT)
+        self.btn_regresar.pack()
         
     def rellenar_combobox(self):
         opciones = sm.consultar_parametrosevaluacion()
