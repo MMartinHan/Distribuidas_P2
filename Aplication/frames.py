@@ -108,8 +108,14 @@ class VentanaSeleccion(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=20)
         
-        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Detalles evaluación", command=self.agregar_evaluacion)
+        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Ingresar evaluación")
         self.boton_opcion_3.pack(side="left", padx=10)
+        self.boton_opcion_4 = tk.Button(self.frame_contenedor, text="Modificar evaluación")
+        self.boton_opcion_4.pack(side="left", padx=10)
+        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Eliminar evaluación")
+        self.boton_opcion_5.pack(side="left", padx=10)
+        self.boton_opcion_6 = tk.Button(self.frame_contenedor, text="Consultar evaluación")
+        self.boton_opcion_6.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
         self.etiqueta_opciones.pack()
@@ -119,6 +125,8 @@ class VentanaSeleccion(tk.Tk):
         
         self.boton_opcion_7 = tk.Button(self.frame_contenedor, text="Ranking de evaluados")
         self.boton_opcion_7.pack(side="left", padx=5)
+        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Reporte cruzado")
+        self.boton_opcion_8.pack(side="left", padx=5)
         
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.boton_regresar.pack()
@@ -134,115 +142,10 @@ class VentanaSeleccion(tk.Tk):
     def agregar_parametro(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaAgregarParametro)
-        
-    def agregar_evaluacion(self):
-        cerrar_ventana(self)
-        abrir_ventana(VentanaAgregarEvaluacion)
-
-class VentanaAgregarEvaluacion(tk.Tk):
-    def __init__(self, master=None):
-        super().__init__(master)
-        self.title("Pantalla de evaluación")
-        self.master = master
-        self.geometry("1100x500")
-        self.candidatos = []
-        self.create_widgets()
-        self.rellenar_tabla()
-        
-    def create_widgets(self):
-        self.label_fecha = tk.Label(self.master, text="Fecha de evaluación:")
-        self.label_fecha.pack()
-        self.entry_fecha = tk.Entry(self.master)
-        self.entry_fecha.pack()
-
-        self.label_candidato = tk.Label(self.master, text="Escoja al candidato")
-        self.label_candidato.pack()
-        op = self.rellenar_combobox()
-        print("esto es op: ",op)
-        opcion_seleccionada = tk.StringVar()
-        self.combo_candidato = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
-        self.combo_candidato.pack()
-        
-        self.label_calificacion = tk.Label(self.master, text="Calificación del candidato:")
-        self.label_calificacion.pack()
-        self.entry_calificacion = tk.Entry(self.master)
-        self.entry_calificacion.pack()
-
-        self.btn_guardar_candidato = tk.Button(self.master, text="Guardar", command=self.guardar_evaluacion)
-        self.btn_guardar_candidato.pack()
-
-        self.label_candidatos_guardados = tk.Label(self.master, text="Detalle evaluacion:")
-        self.label_candidatos_guardados.pack()
-
-        self.treeview_evaluacion = ttk.Treeview(self.master, columns=("cedula_can", "codigo_pev", "numero_eva", "fecha_eva", "calificacion"), show="headings")
-        self.treeview_evaluacion.heading("cedula_can", text="Cedula candidato")
-        self.treeview_evaluacion.heading("codigo_pev", text="Codigo parametro de evaluación")
-        self.treeview_evaluacion.heading("numero_eva", text="Numero evaluacion")
-        self.treeview_evaluacion.heading("fecha_eva", text="Fecha evaluacion")
-        self.treeview_evaluacion.heading("calificacion", text="Calificacion")
-        self.treeview_evaluacion.column("cedula_can", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("codigo_pev", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("numero_eva", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("fecha_eva", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("calificacion", anchor=tk.CENTER)
-        self.treeview_evaluacion.pack()
-
-        self.btn_modificar = tk.Button(self.master, text="Modificar")
-        self.btn_modificar.pack(side=tk.LEFT)
-
-        self.btn_eliminar = tk.Button(self.master, text="Eliminar")
-        self.btn_eliminar.pack(side=tk.LEFT)
-
-        self.treeview_evaluacion.bind("<<TreeviewSelect>>")
-
-        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack()
-        
-    def rellenar_combobox(self):
-        opciones = sm.consultar_parametrosevaluacion()
-        return opciones
-    
-    def mover_inicio(self):
-        cerrar_ventana(self)
-        abrir_ventana(VentanaSeleccion)
-        
-    def rellenar_tabla(self):
-        mi_socket = crear_socket()
-        consultaParametros = "CONSULTAR_EVA|EVALUACION|*"
-        mi_socket.send(consultaParametros.encode("utf-8"))
-        self.treeview_evaluacion.delete(*self.treeview_evaluacion.get_children())
-        data = b''
-        data += mi_socket.recv(1024)
-        print(data)
-        data_decoded = pickle.loads(data)
-        for motivo in data_decoded:
-            self.treeview_evaluacion.insert('', 'end', values=motivo)
-        mi_socket.close()
-        
-    def guardar_evaluacion(self):
-        candidato = self.combo_candidato.get()
-        print(candidato)
-        fecha = self.entry_fecha.get()
-        calificacion = self.entry_calificacion.get()
-        id = sm.generar_id_evaluacion()
-        ingresoParametro = "INGRESAR|EVALUACION|(CEDULA_CAN,CODIGO_PEV,NUMERO_EVA,FECHA_EVA,CALIFICACION_EVA)|"+ str(candidato[0]) + ", " + str(candidato[1]) + ", " + id + ", "+ str(fecha) +", " + str(calificacion)
-        print(ingresoParametro)
-        mi_socket = crear_socket()
-        mi_socket.send(ingresoParametro.encode("utf-8"))
-        respuesta = mi_socket.recv(1024)
-        respuesta = respuesta.decode("utf-8")
-        print(respuesta)
-        mi_socket.close()
-        
-        self.combo_candidato.set('')  # Borrar contenido del campo de entrada
-        self.entry_fecha.delete(0, 'end')  
-        self.entry_calificacion.delete(0, 'end')  
-        self.rellenar_tabla()
 
 class VentanaAgregarCandidato(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
-        self.title("Pantalla candidato")
         self.master = master
         self.geometry("1000x500")
         self.candidatos = []
@@ -399,7 +302,6 @@ class VentanaAgregarCandidato(tk.Tk):
 class VentanaAgregarParametro(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
-        self.title("Pantalla de Parametro de Evaluación")
         self.master = master
         self.geometry("900x500")
         self.parametros = []
@@ -1605,6 +1507,12 @@ class VentanaAsiento(tk.Tk):
 
         self.llenar_tabla()
 
+
+
+    def abrir_ventana_secundaria(self):
+        ventanaSecundaria = ventanaModificarAsiento(self.datos_compartidos)
+        ventanaSecundaria.mainloop()
+
     def abrir_asiento(self, event):  # Agregado parámetro de evento
         seleccion = self.treeview_asientos.selection()
         if seleccion:
@@ -1866,7 +1774,7 @@ class VentanaIngresarAsiento(tk.Tk):
                 mi_socket.close()
                 result = str(result)
                 print(result)
-                #result = result[3:-4]
+                result = result[3:-4]
                 print(result)
                 codigo_tc = result
                 
@@ -1959,212 +1867,42 @@ class ventanaModificarAsiento(tk.Tk):
     def __init__(self, datos_compartidos):
         super().__init__()
         self.title("Pantalla de modificar asiento")
-        self.geometry("900x500")
-
-        self.numero_asiento = datos_compartidos
+        self.geometry("900x450")
+        self.datos_compartidos = datos_compartidos
+        print(self.datos_compartidos)
 
         self.label_cabecera_asiento = tk.Label(self, text="Cabecera del asiento")
-        self.label_cabecera_asiento.pack()
-        self.label_cabecera_asiento.place(x=400, y=10)
-
-        self.label_numero_asiento = tk.Label(self, text="Numero de asiento")
-        self.label_numero_asiento.pack()
-        self.label_numero_asiento.place(x=10, y=50)
-        self.entry_numero_asiento = tk.Entry(self, state=tk.NORMAL)
-        self.entry_numero_asiento.insert(0, datos_compartidos)
-        self.entry_numero_asiento.config(state=tk.DISABLED)
-        self.entry_numero_asiento.pack()
-        self.entry_numero_asiento.place(x=10, y=70)
-
-        self.label_fecha_asiento = tk.Label(self, text="Fecha del asiento")
-        self.label_fecha_asiento.pack()
-        self.label_fecha_asiento.place(x=170, y=50)
-        self.entry_fecha_asiento = tk.Entry(self, state=tk.NORMAL)
-        self.entry_fecha_asiento.pack()
-        self.entry_fecha_asiento.place(x=170, y=70)
-
-        self.label_observacion_asiento = tk.Label(self, text="Observacion del asiento")
-        self.label_observacion_asiento.pack()
-        self.label_observacion_asiento.place(x=330, y=50)
-        self.entry_observacion_asiento = tk.Entry(self, state=tk.NORMAL)
-        self.entry_observacion_asiento.pack()
-        self.entry_observacion_asiento.place(x=330, y=70)
-
+        self.label_tipo_asiento = tk.Label(self, text="Tipo de asiento")
+        self.label_numero_asiento = tk.Label(self, text="Número de asiento")
+        self.entry_numero_asiento = tk.Entry(self, state="normal")
+        id_asiento = cm.generar_id_asiento()
+        print(id_asiento)
+        print(type(id_asiento))
+        self.entry_numero_asiento.insert(0, self.datos_compartidos)
+        self.entry_numero_asiento.config(state="disabled")
+        self.label_fecha_asiento = tk.Label(self, text="Fecha de asiento")
+        self.entry_fecha_asiento = tk.Entry(self)
+        self.label_observacion_asiento = tk.Label(self, text="Observación de asiento")
+        self.entry_observacion_asiento = tk.Entry(self)
         self.label_detalle_asiento = tk.Label(self, text="Detalle del asiento")
-        self.label_detalle_asiento.pack()
-        self.label_detalle_asiento.place(x=400, y=100)
-
         self.label_cuenta_asiento = tk.Label(self, text="Cuenta")
-        self.label_cuenta_asiento.pack()
-        self.label_cuenta_asiento.place(x=10, y=130)
-        opCuenta = self.llenar_combobox_cuenta()
-        self.combo_cuenta_asiento = ttk.Combobox(self, state="readonly", values=opCuenta)
-        self.combo_cuenta_asiento.pack()
-        self.combo_cuenta_asiento.place(x=10, y=150)
-
-        self.label_debe_asiento = tk.Label(self, text="Debe o haber")
-        self.label_debe_asiento.pack()
-        self.label_debe_asiento.place(x=170, y=130)
-        op = ["Debe", "Haber"]
-        self.combo_debe_asiento = ttk.Combobox(self, state="readonly", values=op)
-        self.combo_debe_asiento.pack()
-        self.combo_debe_asiento.place(x=170, y=150)
-
-        self.label_monto_asiento = tk.Label(self, text="Monto")
-        self.label_monto_asiento.pack()
-        self.label_monto_asiento.place(x=330, y=130)
-        self.entry_monto_asiento = tk.Entry(self, state=tk.NORMAL)
-        self.entry_monto_asiento.pack()
-        self.entry_monto_asiento.place(x=330, y=150)
-
-        self.boton_agregar_cuenta = tk.Button(self, text="Agregar cuenta", command=self.agregar_cuenta)
-        self.boton_agregar_cuenta.pack()
-        self.boton_agregar_cuenta.place(x=490, y=150)
-
-        self.treeview_asiento = ttk.Treeview(self, columns=("tipoCuenta", "cuenta", "debe", "haber"))
-        self.treeview_asiento.heading("#0", text="", anchor="w")
+        self.combobox_cuenta_asiento = ttk.Combobox(self, state="readonly")
+        self.label_debe_asiento = tk.Label(self, text="Debe o Haber")
+        op2 = ["Debe", "Haber"]
+        self.combobox_debe_asiento = ttk.Combobox(self, state="readonly")
+        self.label_monto_cuenta = tk.Label(self, text="Monto")
+        self.entry_monto_cuenta = tk.Entry(self)
+        self.boton_agregar_cuenta = tk.Button(self, text="Agregar cuenta")
+        self.treeview_asiento = ttk.Treeview(self.master, columns=("tipoCuenta", "cuenta", "debe", "haber"), show="headings")
         self.treeview_asiento.heading("tipoCuenta", text="Tipo de cuenta")
         self.treeview_asiento.heading("cuenta", text="Cuenta")
         self.treeview_asiento.heading("debe", text="Debe")
         self.treeview_asiento.heading("haber", text="Haber")
-        self.treeview_asiento.column("#0", width=0, stretch="no")
-        self.treeview_asiento.place(x=10, y=180)
-
-        self.boton_modificar_cuenta = tk.Button(self, text="Modificar cuenta", command=self.modificar_cuenta)
-        self.boton_modificar_cuenta.pack()
-        self.boton_modificar_cuenta.place(x=10, y=420)
-
-        self.boton_eliminar_cuenta = tk.Button(self, text="Eliminar cuenta", command=self.eliminar_cuenta)
-        self.boton_eliminar_cuenta.pack()
-        self.boton_eliminar_cuenta.place(x=120, y=420)
-
-        self.boton_modificar_asiento = tk.Button(self, text="Modificar asiento", command=self.modificar_asiento)
-        self.boton_modificar_asiento.pack()
-        self.boton_modificar_asiento.place(x=500, y=420)
-
-        self.boton_eliminar_asiento = tk.Button(self, text="Eliminar asiento", command=self.eliminar_asiento)
-        self.boton_eliminar_asiento.pack()
-        self.boton_eliminar_asiento.place(x=630, y=420)
-
-        self.rellenar_ventana()
-
-    def eliminar_asiento(self):
-        ingresoAsiento = "ELIMINAR_COMPROBANTE|COMPROBANTE|" + self.entry_numero_asiento.get()
-        mi_socket = crear_socket()
-        mi_socket.send(ingresoAsiento.encode("utf-8"))
-        result = mi_socket.recv(1024).decode("utf-8")
-
-
-    def modificar_asiento(self):
-        cantidad_debe = 0
-        cantidad_haber = 0
-        for i in self.treeview_asiento.get_children():
-            if self.treeview_asiento.item(i, "values")[2] != "0":
-                cantidad_debe += float(self.treeview_asiento.item(i, "values")[2])
-            elif self.treeview_asiento.item(i, "values")[3] != "0":
-                cantidad_haber += float(self.treeview_asiento.item(i, "values")[3])
-        mi_socket = crear_socket()
-        validacion = "VERIFICAR_ASIENTO|"+str(cantidad_debe)+"|"+str(cantidad_haber)
-        mi_socket.send(validacion.encode("utf-8"))
-        result = mi_socket.recv(1024)
-        mi_socket.close()
-        result = int.from_bytes(result, 'big')
-        result=bool(result)
-        if result == True:
-            codigo_comprobante = self.entry_numero_asiento.get()
-            fecha = self.entry_fecha_asiento.get()
-            observacion = self.entry_observacion_asiento.get()
-            for i in self.treeview_asiento.get_children():
-                codigo_tc = self.treeview_asiento.item(i, "values")[0]
-                codigo_cuenta = self.treeview_asiento.item(i, "values")[1]
-                debe = self.treeview_asiento.item(i, "values")[2]
-                haber = self.treeview_asiento.item(i, "values")[3]
-                ingresoAsiento = "MODIFICAR_COMPROBANTE|COMPROBANTE|"+str(codigo_tc)+"|"+str(codigo_cuenta)+"|"+str(codigo_comprobante)+"|"+str(fecha)+"|"+str(observacion)+"|"+str(debe)+"|"+str(haber)
-                mi_socket = crear_socket()
-                mi_socket.send(ingresoAsiento.encode("utf-8"))
-                result = mi_socket.recv(1024).decode("utf-8")
-                print(result)
-                print(ingresoAsiento)
-        else:
-            messagebox.showerror("Error", "El asiento no esta cuadrado")
-            return
-        print(result)
-        print(type(result))
-        pass
-
-    def llenar_combobox_cuenta(self):
-        opciones = cm.consultar_cuenta()
-        return opciones
-    
-    def agregar_cuenta(self):
-        tipo_cuenta = self.combo_cuenta_asiento.get()
-        tipo_cuenta = tipo_cuenta.split(" ")
-        tc_id = tipo_cuenta[0]
-        id_cuenta = tipo_cuenta[1]
-        nombre_cuenta = tipo_cuenta[2]
-        mi_socket = crear_socket()
-        consultaCuenta = "OBTENER_NOMBRE_TC|TIPO_CUENTA|NOMBRE_TC|"+tc_id
-        mi_socket.send(consultaCuenta.encode("utf-8"))
-        data = b''
-        data += mi_socket.recv(1024)
-        result = pickle.loads(data)
-        mi_socket.close()
-        result = str(result)
-        result = result[3:-4]
-        if self.combo_debe_asiento.get() == "Debe":
-            self.treeview_asiento.insert("", tk.END, values=(result, nombre_cuenta, self.entry_monto_asiento.get(), 0))
-        elif self.combo_debe_asiento.get() == "Haber":
-            self.treeview_asiento.insert("", tk.END, values=(result, nombre_cuenta, 0, self.entry_monto_asiento.get()))
-        self.vaciar_campos()
-        pass
-
-    def vaciar_campos(self):
-        self.entry_monto_asiento.delete(0, tk.END)
-        self.combo_cuenta_asiento.set("")
-        self.combo_debe_asiento.set("")
-
-    def eliminar_cuenta(self):
-        seleccion = self.treeview_asiento.selection()
-        if seleccion:
-            self.treeview_asiento.delete(seleccion)
-            self.combo_cuenta_asiento.set("")
-            self.combo_debe_asiento.set("")
-            self.entry_monto_asiento.delete(0, tk.END)
-
-    def rellenar_ventana(self):
-        mi_socket = crear_socket()
-        consultaParametros = "CONSULTAR_COMPROBANTE|COMPROBANTE|*|" + str(self.numero_asiento)
-        mi_socket.send(consultaParametros.encode("utf-8"))
-        data = b''
-        data += mi_socket.recv(1024)
-        data_decoded = pickle.loads(data)
-        fecha_asiento = data_decoded[0][3]
-        mi_socket.close()
-        self.entry_fecha_asiento.insert(0, str(fecha_asiento))
-        self.entry_observacion_asiento.insert(0, data_decoded[0][4])
-        for i in data_decoded:
-            self.treeview_asiento.insert("", tk.END, text="", values=(i[0], i[1], i[5], i[6]))
-
-    def actualizar_botones(self, event):
-        seleccion = self.treeview_asiento.selection()
-
-        if seleccion:
-            self.boton_modificar_cuenta.config(state=tk.NORMAL)
-            self.boton_eliminar_cuenta.config(state=tk.NORMAL)
-        else:
-            self.boton_modificar_cuenta.config(state=tk.DISABLED)
-            self.boton_eliminar_cuenta.config(state=tk.DISABLED) 
-
-    def modificar_cuenta(self):
-        seleccion = self.treeview_asiento.selection()
-        if seleccion:
-            self.agregar_cuenta()
-            self.eliminar_cuenta()
-            self.combo_cuenta_asiento.set("")
-            self.combo_debe_asiento.set("")
-            self.combo_cuenta_asiento.set("")
-            self.combo_debe_asiento.set("")
-            self.entry_monto_asiento.delete(0, tk.END)
+        self.boton_modificar_cuenta = tk.Button(self, text="Modificar cuenta", state=tk.DISABLED)
+        self.boton_eliminar_cuenta = tk.Button(self, text="Eliminar cuenta", state=tk.DISABLED)
+        self.boton_guardar_asiento = tk.Button(self, text="Guardar asiento")
+        self.boton_regresar = tk.Button(self, text="Regresar")
+        self.treeview_asiento.bind("<<TreeviewSelect>>")
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
 ventana = VentanaLogin()
