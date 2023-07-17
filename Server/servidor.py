@@ -310,10 +310,26 @@ while True:
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_COMPROBANTE":
+        sql = "SELECT "+sql_query[2]+" FROM "+sql_query[1]+" WHERE CODIGO_COM = "+sql_query[3]
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="MODIFICAR_COMPROBANTE":
+        sql = "UPDATE "+sql_query[1]+" SET CODIGO_TC='"+sql_query[2]+"', CODIGO_CUE='"+sql_query[3]+"', FECHA_COM="+sql_query[5]+", OBSERVACION_COM='"+sql_query[6]+"', CANTIDAD_DEBE_COM="+sql_query[7]+", CANTIDAD_HABER_COM="+sql_query[8]+" WHERE CODIGO_COM="+sql_query[4]
+        print(sql)
     elif sql_query[0]=="VERIFICAR_ASIENTO":
         bandera = rn.verificar_asiento(sql_query[1], sql_query[2])
         bandera = int(bandera)
         conexion.send(bandera.to_bytes(1,'big'))
+    elif sql_query[0]=="ELIMINAR_COMPROBANTE":
+        sql = "DELETE FROM "+sql_query[1]+" WHERE CODIGO_COM="+sql_query[2]
+        resultado = per.persistencia(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
     elif sql_query[0]=="OBTENER_ASIENTO_AUTOMATICO":
         print("Obtener asiento automatico")
         listaAsiento = []
