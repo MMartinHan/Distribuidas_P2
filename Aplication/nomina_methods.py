@@ -33,3 +33,30 @@ def consultar_motivos():
     data_decoded = pickle.loads(data)
     print(data_decoded)
     return data_decoded
+
+def generar_id_detalle():
+    mi_socket = crear_socket()
+    consultaNomina = "CONSULTAR_NOMINA_DETALLE|NOMINA|MAX(CODIGO_NOM)"
+    mi_socket.send(consultaNomina.encode("utf-8"))
+    result = mi_socket.recv(1024).decode("utf-8")
+    result = str(result)
+    print(result)
+    if result == "None":
+        id = "1"  
+    else:
+        result = result[1:-1]
+        id = int(result)
+        id += 1
+        id = str(id)
+    return id
+
+def consultar_empleados():
+    mi_socket = crear_socket()
+    consultaMotivos = "OBTENER_EMPLEADO|EMPLEADO|CEDULA_EMP,NOMBRE_EMP,APELLIDO_EMP"
+    mi_socket.send(consultaMotivos.encode("utf-8"))
+    data = b''
+    data += mi_socket.recv(1024)
+    print(data)
+    data_decoded = pickle.loads(data)
+    print(data_decoded)
+    return data_decoded
