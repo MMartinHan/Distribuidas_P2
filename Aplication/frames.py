@@ -1696,9 +1696,25 @@ class VentanaIngresarAsiento(tk.Tk):
             lista_total.append(lista_pagare_personal)
             lista_total.append(lista_pagare_patronal)
             lista_total.append(lista_pagare_nomina)
-            for motivo in lista_total:
+            lista_parcial = []
+            lista_gastos_sueldos_P=['Gasto','gastoSueldos',datos_compartidos[7],'0']
+            lista_gastos_13_P=['Gasto','gasto13Sueldos',datos_compartidos[0],'0']
+            lista_gastos_14_P=['Gasto','gasto14Sueldos',datos_compartidos[1],'0']
+            lista_gastos_reserva_P=['Gasto','gastoFondoReserva',datos_compartidos[2],'0']
+            lista_gastos_patronal_P=['Gasto','gastoAportePatronal',datos_compartidos[3],'0']
+            lista_pagare_personal_P=['Pasivo','aportePersonalPagar','0',datos_compartidos[4]]
+            lista_pagare_patronal_P=['Pasivo','aportePatronalPagar','0',datos_compartidos[5]]
+            lista_pagare_nomina_P=['Pasivo','nominaPagar','0',datos_compartidos[6]]
+            lista_parcial.append(lista_gastos_sueldos_P)
+            lista_parcial.append(lista_gastos_13_P)
+            lista_parcial.append(lista_gastos_14_P)
+            lista_parcial.append(lista_gastos_reserva_P)
+            lista_parcial.append(lista_gastos_patronal_P)
+            lista_parcial.append(lista_pagare_personal_P)
+            lista_parcial.append(lista_pagare_patronal_P)
+            lista_parcial.append(lista_pagare_nomina_P)
+            for motivo in lista_parcial:
                 self.treeview_asiento.insert('', 'end', values=motivo)
-        
 
     def mover_inicio(self):
         cerrar_ventana(self)
@@ -1734,9 +1750,9 @@ class VentanaIngresarAsiento(tk.Tk):
         cantidad_haber = 0
         for i in self.treeview_asiento.get_children():
             if self.treeview_asiento.item(i, "values")[2] != "0":
-                cantidad_debe += int(self.treeview_asiento.item(i, "values")[2])
+                cantidad_debe += float(self.treeview_asiento.item(i, "values")[2])
             elif self.treeview_asiento.item(i, "values")[3] != "0":
-                cantidad_haber += int(self.treeview_asiento.item(i, "values")[3])
+                cantidad_haber += float(self.treeview_asiento.item(i, "values")[3])
         mi_socket = crear_socket()
         validacion = "VERIFICAR_ASIENTO|"+str(cantidad_debe)+"|"+str(cantidad_haber)
         mi_socket.send(validacion.encode("utf-8"))
@@ -1755,11 +1771,11 @@ class VentanaIngresarAsiento(tk.Tk):
                 data = b''
                 data += mi_socket.recv(1024)
                 result = pickle.loads(data)
-                print(result)
-                print(type(result))
                 mi_socket.close()
                 result = str(result)
-                result = result[3:-4]
+                print(result)
+                #result = result[3:-4]
+                print(result)
                 codigo_tc = result
                 
                 mi_socket = crear_socket()
@@ -1774,7 +1790,6 @@ class VentanaIngresarAsiento(tk.Tk):
                 result = str(result)
                 result = result[3:-4]
                 codigo_cuenta = result
-
                 debe = self.treeview_asiento.item(i, "values")[2]
                 haber = self.treeview_asiento.item(i, "values")[3]
                 ingresoAsiento = "INGRESAR|COMPROBANTE|(CODIGO_TC, CODIGO_CUE, CODIGO_COM, FECHA_COM, OBSERVACIONES_COM, CANTIDAD_DEBE_COM, CANTIDAD_HABER_COM)|"+str(codigo_tc)+","+str(codigo_cuenta)+","+str(codigo_comprobante)+","+str(fecha)+","+str(observacion)+","+str(debe)+","+str(haber)
