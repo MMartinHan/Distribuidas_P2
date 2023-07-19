@@ -57,6 +57,7 @@ while True:
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
+    
     elif sql_query[0]=="MODIFICAR_CAN":
         print("Modificar candidato")
         sql = "UPDATE " + sql_query[1] + " SET NOMBRE_CAN='" + sql_query[2] + "', APELLIDO_CAN='" + sql_query[3] + "', FECHANACIMIENTO_CAN='" + sql_query[4] + "' WHERE CEDULA_CAN=" + sql_query[5]
@@ -244,7 +245,7 @@ while True:
     
     elif sql_query[0] == "CONSULTA_SALARIOS":
         print("Consultar sueldo")
-        sql = "SELECT CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, SUELDO_EMP FROM " + sql_query[1]
+        sql = "SELECT CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, SUELDO_EMP FROM " + sql_query[1]+" WHERE FECHA_ING_EMP >= '"+sql_query[2]+"' AND FECHA_ING_EMP <= '"+sql_query[3]+"'"
         resultado = per.persistencia_2(sql)
         print(resultado)
         resultadoAux = pickle.dumps(resultado)

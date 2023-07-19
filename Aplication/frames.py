@@ -177,14 +177,8 @@ class VentanaSeleccion(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=20)
         
-        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Ingresar evaluación")
+        self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Detalles evaluación", command=self.agregar_evaluacion)
         self.boton_opcion_3.pack(side="left", padx=10)
-        self.boton_opcion_4 = tk.Button(self.frame_contenedor, text="Modificar evaluación")
-        self.boton_opcion_4.pack(side="left", padx=10)
-        self.boton_opcion_5 = tk.Button(self.frame_contenedor, text="Eliminar evaluación")
-        self.boton_opcion_5.pack(side="left", padx=10)
-        self.boton_opcion_6 = tk.Button(self.frame_contenedor, text="Consultar evaluación")
-        self.boton_opcion_6.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
         self.etiqueta_opciones.pack()
@@ -194,8 +188,6 @@ class VentanaSeleccion(tk.Tk):
         
         self.boton_opcion_7 = tk.Button(self.frame_contenedor, text="Ranking de evaluados")
         self.boton_opcion_7.pack(side="left", padx=5)
-        self.boton_opcion_8 = tk.Button(self.frame_contenedor, text="Reporte cruzado")
-        self.boton_opcion_8.pack(side="left", padx=5)
         
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.boton_regresar.pack()
@@ -211,12 +203,115 @@ class VentanaSeleccion(tk.Tk):
     def agregar_parametro(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaAgregarParametro)
+        
+    def agregar_evaluacion(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAgregarEvaluacion)
+
+class VentanaAgregarEvaluacion(tk.Tk):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.title("Pantalla de evaluación")
+        self.master = master
+        self.geometry("1100x500")
+        self.candidatos = []
+        self.create_widgets()
+        self.rellenar_tabla()
+        
+    def create_widgets(self):
+        self.label_numero_evaluacion = tk.Label(self.master, text="Número de evaluación:")
+        self.label_numero_evaluacion.pack()
+        self.label_id = tk.StringVar()
+        self.entry_numero_evaluacion = tk.Label(self.master,justify=tk.CENTER,textvariable=self.label_id)
+        self.label_id.set(sm.generar_id_evaluacion())
+        self.entry_numero_evaluacion.pack()
+        self.label_numero_evaluacion.place(x=10, y=10)
+        self.entry_numero_evaluacion.place(x=150, y=10)
+        
+        self.label_fecha = tk.Label(self.master, text="Fecha de evaluación:")
+        self.label_fecha.pack()
+        self.entry_fecha = tk.Entry(self.master)
+        self.entry_fecha.pack()
+        self.label_fecha.place(x=10, y=40)
+        self.entry_fecha.place(x=150, y=40)
+
+        self.label_candidato = tk.Label(self.master, text="Escoja al candidato")
+        self.label_candidato.pack()
+        op = self.rellenar_combobox()
+        opcion_seleccionada = tk.StringVar()
+        self.combo_candidato = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
+        self.combo_candidato.pack()
+        self.label_candidato.place(x=10, y=70)
+        self.combo_candidato.place(x=150, y=70)
+
+        self.treeview_evaluacion = ttk.Treeview(self.master, columns=("cedula_can", "nombre_can", "apellido_can", "codigo_pev", "nombre_pev", "puntaje"), show="headings")
+        self.treeview_evaluacion.heading("cedula_can", text="Cedula candidato")
+        self.treeview_evaluacion.heading("nombre_can", text="Nombre candidato")
+        self.treeview_evaluacion.heading("apellido_can", text="Apellido candidato")
+        self.treeview_evaluacion.heading("codigo_pev", text="Codigo parametro de evaluación")
+        self.treeview_evaluacion.heading("nombre_pev", text="Nombre parametro de evaluación")
+        self.treeview_evaluacion.heading("puntaje_pev", text="Puntaje")
+        self.treeview_evaluacion.column("cedula_can", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("nombre_can", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("apellido_can", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("codigo_pev", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("nombre_pev", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("puntaje_pev", anchor=tk.CENTER)
+        self.treeview_evaluacion.pack()
+        self.treeview_evaluacion.place(x=10, y=100)
+
+        self.treeview_evaluacion.bind("<<TreeviewSelect>>")
+
+        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+        
+    def rellenar_combobox(self):
+        opciones = sm.consultar_candidatos()
+        return opciones
+    
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
+        
+    def rellenar_tabla(self):
+        mi_socket = crear_socket()
+        consultaParametros = "CONSULTAR_EVA|EVALUACION|*"
+        mi_socket.send(consultaParametros.encode("utf-8"))
+        self.treeview_evaluacion.delete(*self.treeview_evaluacion.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_evaluacion.insert('', 'end', values=motivo)
+        mi_socket.close()
+        
+    def guardar_evaluacion(self):
+        candidato = self.combo_candidato.get()
+        print(candidato)
+        fecha = self.entry_fecha.get()
+        calificacion = self.entry_calificacion.get()
+        id = sm.generar_id_evaluacion()
+        ingresoParametro = "INGRESAR|EVALUACION|(CEDULA_CAN,CODIGO_PEV,NUMERO_EVA,FECHA_EVA,CALIFICACION_EVA)|"+ str(candidato[0]) + ", " + str(candidato[1]) + ", " + id + ", "+ str(fecha) +", " + str(calificacion)
+        print(ingresoParametro)
+        mi_socket = crear_socket()
+        mi_socket.send(ingresoParametro.encode("utf-8"))
+        respuesta = mi_socket.recv(1024)
+        respuesta = respuesta.decode("utf-8")
+        print(respuesta)
+        mi_socket.close()
+        
+        self.combo_candidato.set('')  # Borrar contenido del campo de entrada
+        self.entry_fecha.delete(0, 'end')  
+        self.entry_calificacion.delete(0, 'end')  
+        self.rellenar_tabla()
 
 class VentanaAgregarCandidato(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
+        self.title("Pantalla candidato")
         self.master = master
-        self.geometry("1000x500")
+        self.geometry("850x650")
         self.candidatos = []
         self.create_widgets()
         self.rellenar_tabla()
@@ -224,29 +319,49 @@ class VentanaAgregarCandidato(tk.Tk):
     def create_widgets(self):
         self.label_cedula = tk.Label(self.master, text="Cédula del candidato:")
         self.label_cedula.pack()
+        self.label_cedula.place(x=10, y=10)
         self.entry_cedula = tk.Entry(self.master)
         self.entry_cedula.pack()
+        self.entry_cedula.place(x=10, y=30)
+
+        self.label_buscar_candidato = tk.Label(self.master, text="Buscar candidato:")
+        self.label_buscar_candidato.pack()
+        self.label_buscar_candidato.place(x=200, y=10)
+        self.entry_buscar_candidato = tk.Entry(self.master)
+        self.entry_buscar_candidato.pack()
+        self.entry_buscar_candidato.place(x=300, y=10)
+        self.btn_buscar_candidato = tk.Button(self.master, text="Buscar", command=self.buscar_candidato)
+        self.btn_buscar_candidato.pack()
+        self.btn_buscar_candidato.place(x=200, y=30)
 
         self.label_nombre = tk.Label(self.master, text="Nombre del candidato:")
         self.label_nombre.pack()
+        self.label_nombre.place(x=10, y=60)
         self.entry_nombre = tk.Entry(self.master)
         self.entry_nombre.pack()
+        self.entry_nombre.place(x=10, y=90)
 
         self.label_apellido = tk.Label(self.master, text="Apellido del candidato:")
         self.label_apellido.pack()
+        self.label_apellido.place(x=10, y=110)
         self.entry_apellido = tk.Entry(self.master)
         self.entry_apellido.pack()
+        self.entry_apellido.place(x=10, y=140)
 
         self.label_fecha_nacimiento = tk.Label(self.master, text="Fecha de Nacimiento del candidato:")
         self.label_fecha_nacimiento.pack()
+        self.label_fecha_nacimiento.place(x=10, y=170)
         self.entry_fecha_nacimiento = tk.Entry(self.master)
         self.entry_fecha_nacimiento.pack()
+        self.entry_fecha_nacimiento.place(x=10, y=200)
 
         self.btn_guardar_candidato = tk.Button(self.master, text="Guardar", command=self.guardar_candidato)
         self.btn_guardar_candidato.pack()
+        self.btn_guardar_candidato.place(x=10, y=230)
 
         self.label_candidatos_guardados = tk.Label(self.master, text="Candidatos Guardados:")
         self.label_candidatos_guardados.pack()
+        self.label_candidatos_guardados.place(x=10, y=260)
 
         self.treeview_candidatos = ttk.Treeview(self.master, columns=("cedula", "nombre", "apellido", "fechaNacimiento"), show="headings")
         self.treeview_candidatos.heading("cedula", text="Cedula")
@@ -258,17 +373,25 @@ class VentanaAgregarCandidato(tk.Tk):
         self.treeview_candidatos.column("apellido", anchor=tk.CENTER)
         self.treeview_candidatos.column("fechaNacimiento", anchor=tk.CENTER)
         self.treeview_candidatos.pack()
+        self.treeview_candidatos.place(x=10, y=290)
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_candidato)
-        self.btn_modificar.pack(side=tk.LEFT)
+        self.btn_modificar.pack()
+        self.btn_modificar.place(x=10, y=550)
 
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_candidato)
-        self.btn_eliminar.pack(side=tk.LEFT)
+        self.btn_eliminar.pack()
+        self.btn_eliminar.place(x=80, y=550)
+        
+        self.btn_resetear = tk.Button(self.master, text="Resetear ventana", command=self.resetear_campos)
+        self.btn_resetear.pack()
+        self.btn_resetear.place(x=150, y=550)
 
         self.treeview_candidatos.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
-        self.btn_regresar.pack(side=tk.RIGHT)
+        self.btn_regresar.pack()
+        self.btn_resetear.place(x=210, y=550)
 
     def rellenar_tabla(self):
         mi_socket = crear_socket()
@@ -277,6 +400,7 @@ class VentanaAgregarCandidato(tk.Tk):
         self.treeview_candidatos.delete(*self.treeview_candidatos.get_children())
         data = b''
         data += mi_socket.recv(1024)
+        print(data)
         data_decoded = pickle.loads(data)
         for candidato in data_decoded:
             self.treeview_candidatos.insert('', 'end', values=candidato)
@@ -296,6 +420,7 @@ class VentanaAgregarCandidato(tk.Tk):
         mi_socket.send(ingresoCandidato.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
+        print(respuesta)
         mi_socket.close()
         
         self.entry_cedula.delete(0, 'end')  # Borrar contenido del campo de entrada
@@ -344,7 +469,29 @@ class VentanaAgregarCandidato(tk.Tk):
             self.entry_apellido.delete(0, 'end')
             self.entry_fecha_nacimiento.delete(0, 'end')
             self.rellenar_tabla()
+    
+    def buscar_candidato(self):
+        codigo = self.entry_buscar_candidato.get()
+        buscarMotivo = "CONSULTAR_ESPECIFICO|CANDIDATO|NOMBRE_CAN|"+codigo
+        mi_socket = crear_socket()
+        mi_socket.send(buscarMotivo.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        if len(data_decoded) == 0:
+            messagebox.showinfo("Error", "No se encontró el candidato")
+        else:
+            self.treeview_candidatos.delete(*self.treeview_candidatos.get_children())
+            self.entry_nombre.delete(0, 'end')
+            for motivo in data_decoded:
+                self.treeview_candidatos.insert('', 'end', values=motivo)
             
+    def resetear_campos(self):
+        self.entry_nombre.delete(0, 'end')
+        self.entry_buscar_candidato.delete(0, 'end')
+        self.rellenar_tabla() 
+    
     def actualizar_botones(self, event):
         seleccion = self.treeview_candidatos.selection()
 
@@ -353,6 +500,7 @@ class VentanaAgregarCandidato(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             candidato = self.treeview_candidatos.item(indice)['values']
+            print(candidato)
             self.entry_cedula.delete(0, tk.END)
             self.entry_cedula.insert(tk.END, candidato[0])
             self.entry_nombre.delete(0, tk.END)
@@ -368,6 +516,7 @@ class VentanaAgregarCandidato(tk.Tk):
 class VentanaAgregarParametro(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
+        self.title("Pantalla de Parametro de Evaluación")
         self.master = master
         self.geometry("900x500")
         self.parametros = []
@@ -435,6 +584,7 @@ class VentanaAgregarParametro(tk.Tk):
         self.treeview_parametros.delete(*self.treeview_parametros.get_children())
         data = b''
         data += mi_socket.recv(1024)
+        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_parametros.insert('', 'end', values=motivo)
@@ -446,10 +596,12 @@ class VentanaAgregarParametro(tk.Tk):
         puntaje_maximo = self.entry_puntaje_maximo.get()
         id = sm.generar_id_parametroEvaluacion()
         ingresoParametro = "INGRESAR|PARAMETROEVALUACION|(CEDULA_CAN,CODIGO_PEV,NOMBRE_PEV,PUNTAJEMAXIMO_PEV)|"+ str(candidato) + ", " + id + ", "+ str(nombre_parametro) +", " + str(puntaje_maximo)
+        print(ingresoParametro)
         mi_socket = crear_socket()
         mi_socket.send(ingresoParametro.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
+        print(respuesta)
         mi_socket.close()
         
         self.combo_candidato.set('')  # Borrar contenido del campo de entrada
@@ -469,6 +621,7 @@ class VentanaAgregarParametro(tk.Tk):
             nombre_nuevo = self.entry_nombre_parametro.get()
             puntaje_nuevo = self.entry_puntaje_maximo.get()
             modificarParametro = "MODIFICAR_PARAMETRO|PARAMETROEVALUACION|"+str(candidato_nuevo)+"|"+nombre_nuevo+"|"+str(puntaje_nuevo)+"|"+str(codigo_actual)
+            print(modificarParametro)
             mi_socket = crear_socket()
             mi_socket.send(modificarParametro.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -504,6 +657,7 @@ class VentanaAgregarParametro(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             parametro = self.treeview_parametros.item(indice)['values']
+            print(parametro)
             self.combo_candidato.set('')
             self.combo_candidato.set(parametro[0])
             self.entry_nombre_parametro.delete(0, tk.END)
@@ -514,6 +668,31 @@ class VentanaAgregarParametro(tk.Tk):
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
 
+class VentanaDetalleEvaluacion(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de motivo")
+        self.geometry("900x400")
+        self.create_widgets()
+        
+    def create_widgets(self):
+        
+        self.label_cedula = tk.Label(self, text="Cedula del candidato: ")
+        self.label_cedula.pack()
+        self.label_cedula.place(x=10, y=10)
+        self.text_cedula = tk.StringVar()
+        self.label_cedula2 = tk.Entry(self, textvariable=self.text_cedula)
+        self.label_cedula2.pack()
+        self.label_cedula2.place(x=150, y=10)
+        
+        self.label_CPE = tk.Label(self, text="Codigo del parametro de evaluacion: ")
+        self.label_CPE.pack()
+        self.label_CPE.place(x=10, y=40)
+        self.text_CPE = tk.StringVar()
+        self.label_CPE2 = tk.Entry(self, textvariable=self.text_CPE)
+        self.label_CPE2.pack()
+        self.label_CPE2.place(x=250, y=40)
+    
 class VentanaNomina(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -589,13 +768,29 @@ class VentanaVerReporte(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Reporte de empleados y salarios")
-        self.geometry("900x300")
+        self.geometry("900x400")
         self.create_widgets()
-        self.rellenar_tabla()
+        #self.rellenar_tabla()
         
     def create_widgets(self):
         
-        self.label_tabla = tk.Label(self.master, text="Tabla de empleados y salarios")
+        self.label_fecha_inicio = tk.Label(self, text="Fecha de inicio")
+        self.label_fecha_inicio.pack()
+        self.label_fecha_inicio.place(x=10, y=10)
+        self.entry_fecha_inicio = tk.Entry(self)
+        self.entry_fecha_inicio.pack()
+        self.entry_fecha_inicio.place(x=100, y=10)
+        self.label_fecha_fin = tk.Label(self, text="Fecha de fin")
+        self.label_fecha_fin.pack()
+        self.label_fecha_fin.place(x=10, y=40)
+        self.entry_fecha_fin = tk.Entry(self)
+        self.entry_fecha_fin.pack()
+        self.entry_fecha_fin.place(x=100, y=40)
+        self.btn_reporte = tk.Button(self, text="Generar reporte", command=self.generar_reporte)
+        self.btn_reporte.pack()
+        self.btn_reporte.place(x=10, y=70)
+        
+        self.label_tabla = tk.Label(self.master, text="Tabla de empleados y salarios",state=tk.DISABLED)
         self.label_tabla.pack()
         self.treeview_reporte = ttk.Treeview(self.master, columns=("codigo", "nombre", "apellido", "salario"), show="headings")
         self.treeview_reporte.heading("codigo", text="Código")
@@ -607,9 +802,11 @@ class VentanaVerReporte(tk.Tk):
         self.treeview_reporte.column("apellido", anchor=tk.CENTER)
         self.treeview_reporte.column("salario", anchor=tk.CENTER)
         self.treeview_reporte.pack()
+        self.treeview_reporte.place(x=10, y=100)
         
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.regresar)
         self.btn_regresar.pack()
+        self.btn_regresar.place(x=10, y=350)
        
     def regresar(self):
         cerrar_ventana(self)
@@ -618,6 +815,24 @@ class VentanaVerReporte(tk.Tk):
     def rellenar_tabla(self):
         mi_socket = crear_socket()
         datosReporte = "CONSULTA_SALARIOS|EMPLEADO"
+        mi_socket.send(datosReporte.encode("utf-8"))
+        self.treeview_reporte.delete(*self.treeview_reporte.get_children())
+        data = b''
+        while True:
+            chunk = mi_socket.recv(1024)
+            if not chunk:
+                break
+            data += chunk
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_reporte.insert('', 'end', values=motivo)
+        mi_socket.close()
+    
+    def generar_reporte(self):
+        fecha_inicio = self.entry_fecha_inicio.get()
+        fecha_fin = self.entry_fecha_fin.get()
+        mi_socket = crear_socket()
+        datosReporte = "CONSULTA_SALARIOS|EMPLEADO|"+fecha_inicio+"|"+fecha_fin
         mi_socket.send(datosReporte.encode("utf-8"))
         self.treeview_reporte.delete(*self.treeview_reporte.get_children())
         data = b''
@@ -709,7 +924,7 @@ class VentanaDetalleNomina(tk.Tk):
         mi_socket = crear_socket()
         constultaJoin = "JOIN|MOTIVO|EMPLEADO"
         mi_socket.send(constultaJoin.encode("utf-8"))
-        self.treeview_detalle.delete(*self.treeview_detalle.get_children())
+        #self.treeview_detalle.delete(*self.treeview_detalle.get_children())
         data = b''
         data += mi_socket.recv(1024)
         data_decoded = pickle.loads(data)
@@ -861,6 +1076,15 @@ class VentanaOpcionesNomina(tk.Tk):
         abrir_ventana(VentanaNomina)
         
     def reseterar_campos(self):
+        self.text_motivo.set("")
+        self.text_cedula.set("")
+        self.text_nomina.set("")
+        self.entry_fecha.delete(0, tk.END)
+        self.entry_fecha.config(state=tk.DISABLED)
+        self.entry_detalle.delete(0, tk.END)
+        self.entry_detalle.config(state=tk.DISABLED)
+        self.entry_valor.delete(0, tk.END)
+        self.entry_valor.config(state=tk.DISABLED)
         self.rellenar_tabla()
         
     def rellenar_tabla(self):
@@ -2543,5 +2767,9 @@ class estadoResultados(tk.Tk):
         return data_decoded
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
+<<<<<<< HEAD
 ventana = VentanaAsiento()
+=======
+ventana = VentanaLogin()
+>>>>>>> aa5560b517394f56a5fc1d4d267dc526b9f63889
 ventana.mainloop()
