@@ -2043,10 +2043,10 @@ class ventanaModificarAsiento(tk.Tk):
         cantidad_debe = 0
         cantidad_haber = 0
         for i in self.treeview_asiento.get_children():
-            if self.treeview_asiento.item(i, "values")[2] != "0":
                 cantidad_debe += float(self.treeview_asiento.item(i, "values")[2])
-            elif self.treeview_asiento.item(i, "values")[3] != "0":
                 cantidad_haber += float(self.treeview_asiento.item(i, "values")[3])
+        print(cantidad_debe)
+        print(cantidad_haber)
         mi_socket = crear_socket()
         validacion = "VERIFICAR_ASIENTO|"+str(cantidad_debe)+"|"+str(cantidad_haber)
         mi_socket.send(validacion.encode("utf-8"))
@@ -2063,12 +2063,32 @@ class ventanaModificarAsiento(tk.Tk):
                 codigo_cuenta = self.treeview_asiento.item(i, "values")[1]
                 debe = self.treeview_asiento.item(i, "values")[2]
                 haber = self.treeview_asiento.item(i, "values")[3]
-                ingresoAsiento = "MODIFICAR_COMPROBANTE|COMPROBANTE|"+str(codigo_tc)+"|"+str(codigo_cuenta)+"|"+str(codigo_comprobante)+"|"+str(fecha)+"|"+str(observacion)+"|"+str(debe)+"|"+str(haber)
                 mi_socket = crear_socket()
-                mi_socket.send(ingresoAsiento.encode("utf-8"))
-                result = mi_socket.recv(1024).decode("utf-8")
+                codigo_tc = "OBTENER_CODIGO_TC|TIPO_CUENTA|NOMBRE_TC|"+str(codigo_tc)
+                mi_socket.send(codigo_tc.encode("utf-8"))
+                data = b''
+                data += mi_socket.recv(1024)
+                result = pickle.loads(data)
+                mi_socket.close()
+                result = str(result)
                 print(result)
-                print(ingresoAsiento)
+                result = result[3:-4]
+                print(result)
+                codigo_tc = result
+                mi_socket = crear_socket()
+                codigo_cuenta = "OBTENER_CODIGO_CUE|CUENTA|NOMBRE_CUE|"+str(codigo_tc)
+                data = b''
+                data += mi_socket.recv(1024)
+                result = pickle.loads(data)
+                print(result)
+                print(type(result))
+                mi_socket.close()
+                result = str(result)
+                result = result[3:-4]
+                codigo_cuenta = result
+                print("Este es el codigo de tipo")
+                print(codigo_tc)
+                
         else:
             messagebox.showerror("Error", "El asiento no esta cuadrado")
             return
@@ -2151,5 +2171,5 @@ class ventanaModificarAsiento(tk.Tk):
             self.entry_monto_asiento.delete(0, tk.END)
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
-ventana = VentanaLogin()
+ventana = VentanaAsiento()
 ventana.mainloop()
