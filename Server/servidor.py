@@ -299,6 +299,14 @@ while True:
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
+    elif sql_query[0]=="OBTENER_NOMBRE_CUE":
+        print("Obtener nombre tipo cuenta")
+        sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE CODIGO_CUE=" + sql_query[3]
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
     elif sql_query[0]=="OBTENER_CODIGO_TC":
         print("Obtener codigo tipo cuenta")
         sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE NOMBRE_TC='" + sql_query[3] + "'"

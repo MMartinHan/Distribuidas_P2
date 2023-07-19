@@ -2013,6 +2013,7 @@ class ventanaModificarAsiento(tk.Tk):
         self.treeview_asiento.heading("haber", text="Haber")
         self.treeview_asiento.column("#0", width=0, stretch="no")
         self.treeview_asiento.place(x=10, y=180)
+        self.treeview_asiento.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.boton_modificar_cuenta = tk.Button(self, text="Modificar cuenta", command=self.modificar_cuenta)
         self.boton_modificar_cuenta.pack()
@@ -2142,22 +2143,62 @@ class ventanaModificarAsiento(tk.Tk):
         data = b''
         data += mi_socket.recv(1024)
         data_decoded = pickle.loads(data)
+        lista_de_ejemplo = data_decoded
         fecha_asiento = data_decoded[0][3]
         mi_socket.close()
+        lista_de_ejemplo = [list(tupla) for tupla in lista_de_ejemplo]
+        for i in range(len(lista_de_ejemplo)):
+            mi_socket = crear_socket()
+            consultaCuenta = "OBTENER_NOMBRE_TC|TIPO_CUENTA|NOMBRE_TC|"+lista_de_ejemplo[i][0]
+            mi_socket.send(consultaCuenta.encode("utf-8"))
+            data = b''
+            data += mi_socket.recv(1024)
+            result = pickle.loads(data)
+            mi_socket.close()
+            result = str(result)
+            nombre_tc = result[3:-4]
+            lista_de_ejemplo[i][0] = nombre_tc
+
+            mi_socket = crear_socket()
+            consultaCuenta1 = "OBTENER_NOMBRE_CUE|CUENTA|NOMBRE_CUE|"+lista_de_ejemplo[i][1]
+            mi_socket.send(consultaCuenta1.encode("utf-8"))
+            data1 = b''
+            data1 += mi_socket.recv(1024)
+            result1 = pickle.loads(data1)
+            mi_socket.close()
+            result1 = str(result1)
+            nombre_cue = result1[3:-4]
+            lista_de_ejemplo[i][1] = nombre_cue
+        print(lista_de_ejemplo)
+
+
         self.entry_fecha_asiento.insert(0, str(fecha_asiento))
         self.entry_observacion_asiento.insert(0, data_decoded[0][4])
-        for i in data_decoded:
+        for i in lista_de_ejemplo:
             self.treeview_asiento.insert("", tk.END, text="", values=(i[0], i[1], i[5], i[6]))
 
     def actualizar_botones(self, event):
         seleccion = self.treeview_asiento.selection()
-
         if seleccion:
+            if self.treeview_asiento.item(seleccion, "values")[2] == "0.00" or self.treeview_asiento.item(seleccion, "values")[2] == "0":
+                self.combo_debe_asiento.set("Haber")
+                self.entry_monto_asiento.delete(0, tk.END)
+                self.entry_monto_asiento.insert(0, self.treeview_asiento.item(seleccion, "values")[3])
+            elif self.treeview_asiento.item(seleccion, "values")[3] == "0.00" or self.treeview_asiento.item(seleccion, "values")[3] == "0":
+                self.combo_debe_asiento.set("Debe")
+                self.entry_monto_asiento.delete(0, tk.END)
+                self.entry_monto_asiento.insert(0, self.treeview_asiento.item(seleccion, "values")[2])
+            string_buscado = self.treeview_asiento.item(seleccion, "values")[1]
+            opciones = self.llenar_combobox_cuenta()
+            for opcion in opciones:
+                if string_buscado in opcion:
+                    self.combo_cuenta_asiento.set(opcion)
+
             self.boton_modificar_cuenta.config(state=tk.NORMAL)
             self.boton_eliminar_cuenta.config(state=tk.NORMAL)
         else:
             self.boton_modificar_cuenta.config(state=tk.DISABLED)
-            self.boton_eliminar_cuenta.config(state=tk.DISABLED) 
+            self.boton_eliminar_cuenta.config(state=tk.DISABLED)
 
     def modificar_cuenta(self):
         seleccion = self.treeview_asiento.selection()
