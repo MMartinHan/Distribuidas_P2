@@ -200,6 +200,16 @@ while True:
         print(type(resultado))
         conexion.send(resultado.encode("utf-8"))
     
+    elif sql_query[0] == "CONSULTA_SALARIOS":
+        print("Consultar sueldo")
+        sql = "SELECT CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, SUELDO_EMP FROM " + sql_query[1]
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultado)
+        print(type(resultado))
+        conexion.send(resultadoAux)
+    
     elif sql_query[0]=="OBTENER_EMPLEADO":
         print("Obtener motivo")
         sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1]
@@ -292,7 +302,9 @@ while True:
     elif sql_query[0]=="OBTENER_CODIGO_TC":
         print("Obtener codigo tipo cuenta")
         sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE NOMBRE_TC='" + sql_query[3] + "'"
+        print(sql)
         resultado = per.persistencia_2(sql)
+        print(resultado)
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
