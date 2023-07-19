@@ -1768,6 +1768,13 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_tipo_cuenta)
         self.btn_guardar_cuenta.pack()
 
+        self.label_buscar = tk.Label(self.master, text="Buscar tipo de cuenta:")
+        self.label_buscar.pack()
+        self.entry_buscar = tk.Entry(self.master)
+        self.entry_buscar.pack()
+        self.btn_buscar = tk.Button(self.master, text="Buscar", command=self.buscar_tipo_cuenta)
+        self.btn_buscar.pack()
+
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
 
@@ -1782,10 +1789,30 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_tipo_cuenta)
         self.btn_eliminar.pack(side=tk.LEFT, padx=5)
 
+        self.btn_mostrar_tc = tk.Button(self.master, text="Mostrar todos los tipos de cuenta", command=self.rellenar_tabla)
+        self.btn_mostrar_tc.pack(side=tk.LEFT, padx=5)
+
         self.treeview_cuentas.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack(side=tk.RIGHT)
+
+    def buscar_tipo_cuenta(self):
+        codigo = self.entry_buscar.get()
+        consuta = "CONSULTAR_TC_NOMBRE|TIPO_CUENTA|NOMBRE_TC|"+codigo
+        mi_socket = crear_socket()
+        mi_socket.send(consuta.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        if len(data_decoded) == 0:
+            messagebox.showinfo("Error", "No se encontró el repote")
+        else:
+            self.treeview_cuentas.delete(*self.treeview_cuentas.get_children())
+            self.entry_buscar.delete(0, 'end')
+            for motivo in data_decoded:
+                self.treeview_cuentas.insert('', 'end', values=motivo)
     
     def mover_inicio(self):
         cerrar_ventana(self)
@@ -1862,7 +1889,7 @@ class VentanaIngresarCuenta(tk.Tk):
     def __init__(self, master=None):
         super().__init__(master)
         self.master = master
-        self.geometry("600x400")
+        self.geometry("700x500")
         self.cuentas = []
         self.tipos_cuenta = []
         self.create_widgets()
@@ -1882,6 +1909,13 @@ class VentanaIngresarCuenta(tk.Tk):
 
         self.btn_guardar_cuenta = tk.Button(self.master, text="Guardar", command=self.guardar_cuenta)
         self.btn_guardar_cuenta.pack()
+
+        self.label_buscar = tk.Label(self.master, text="Buscar cuenta:")
+        self.label_buscar.pack()
+        self.entry_buscar = tk.Entry(self.master)
+        self.entry_buscar.pack()
+        self.btn_buscar = tk.Button(self.master, text="Buscar", command=self.buscar_cuenta)
+        self.btn_buscar.pack()
 
         self.label_cuentas_guardadas = tk.Label(self.master, text="Cuentas Guardadas:")
         self.label_cuentas_guardadas.pack()
@@ -1906,11 +1940,30 @@ class VentanaIngresarCuenta(tk.Tk):
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_cuenta)
         self.btn_eliminar.pack(side=tk.LEFT, padx=5)
 
+        self.btn_mostrar_cuentas = tk.Button(self.master, text="Mostrar todas las cuentas", command=self.rellenar_tabla)
+        self.btn_mostrar_cuentas.pack(side=tk.LEFT, padx=5)
+
         self.treeview_cuentas.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_atras)
         self.btn_regresar.pack(side=tk.RIGHT)
 
+    def buscar_cuenta(self):
+        codigo = self.entry_buscar.get()
+        consuta = "CONSULTAR_CUENTA_NOMBRE|CUENTA|NOMBRE_CUE|"+codigo
+        mi_socket = crear_socket()
+        mi_socket.send(consuta.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        if len(data_decoded) == 0:
+            messagebox.showinfo("Error", "No se encontró el repote")
+        else:
+            self.treeview_cuentas.delete(*self.treeview_cuentas.get_children())
+            self.entry_buscar.delete(0, 'end')
+            for motivo in data_decoded:
+                self.treeview_cuentas.insert('', 'end', values=motivo)
     def rellenar_tabla(self):
         mi_socket = crear_socket()
         consultaMotivos = "CONSULTAR|CUENTA|*"
@@ -1995,10 +2048,17 @@ class VentanaAsiento(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Pantalla de asientos contables")
-        self.geometry("1050x400")
+        self.geometry("1050x600")
 
         self.boton_ingresar_asiento = tk.Button(self, text="Ingresar asiento", command=self.ingresar_asiento)
         self.boton_ingresar_asiento.pack(side=tk.TOP, pady=10)
+
+        self.label_buscar_asiento = tk.Label(self, text="Buscar asiento por observacion")
+        self.label_buscar_asiento.pack(side=tk.TOP, pady=10)
+        self.entry_buscar_asiento = tk.Entry(self)
+        self.entry_buscar_asiento.pack(side=tk.TOP, pady=10)
+        self.boton_buscar_asiento = tk.Button(self, text="Buscar asiento", command=self.buscar_asiento)
+        self.boton_buscar_asiento.pack(side=tk.TOP, pady=10)
 
         self.label_asientos_contables = tk.Label(self, text="Asientos contables")
         self.label_asientos_contables.pack(side=tk.TOP, pady=10)
@@ -2014,11 +2074,33 @@ class VentanaAsiento(tk.Tk):
 
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.boton_regresar.pack(side=tk.BOTTOM, pady=10)
-
-        self.treeview_asientos.bind("<<TreeviewSelect>>", self.actualizar_botones)  # Agregado evento
+         # Agregado evento
         self.treeview_asientos.bind("<<TreeviewSelect>>", self.abrir_asiento)  # Agregado evento
 
         self.llenar_tabla()
+
+    def buscar_asiento(self):
+        codigo = self.entry_buscar_asiento.get()
+        consuta = "CONSULTAR_COMPROBANTE_OBSERVACION|COMPROBANTE|OBSERVACIONES_COM|"+codigo
+        mi_socket = crear_socket()
+        mi_socket.send(consuta.encode("utf-8"))
+        data = b''
+        while True:
+            chunk = mi_socket.recv(1024)
+            if not chunk:
+                break
+            data += chunk
+        data_decoded = pickle.loads(data)
+        
+        codigos_com = set()
+        for motivo in data_decoded:
+            codigo_com = motivo[1]  # Suponiendo que el código de "CODIGO_COM" está en la posición 1 de cada motivo
+            if codigo_com not in codigos_com:
+                self.treeview_asientos.delete(*self.treeview_asientos.get_children())
+                self.treeview_asientos.insert('', 'end', values=motivo)
+                codigos_com.add(codigo_com)
+            
+        mi_socket.close()
 
     def abrir_asiento(self, event):  # Agregado parámetro de evento
         seleccion = self.treeview_asientos.selection()
@@ -2026,13 +2108,6 @@ class VentanaAsiento(tk.Tk):
             self.datos_compartidos = self.treeview_asientos.item(seleccion)['values'][0]
             ventanaSecundaria = ventanaModificarAsiento(self.datos_compartidos)
             ventanaSecundaria.mainloop()
-
-    def actualizar_botones(self, event):  # Agregado parámetro de evento
-        seleccion = self.treeview_asientos.selection()
-        if seleccion:
-            self.boton_eliminar_asiento.config(state=tk.NORMAL)
-        else:
-            self.boton_eliminar_asiento.config(state=tk.DISABLED)
 
     def ingresar_asiento(self):
         cerrar_ventana(self)

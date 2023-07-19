@@ -8,7 +8,7 @@ def crear_socket():
     
 def generar_id_parametroEvaluacion():
     mi_socket = crear_socket()
-    consultaParametros = "CONSULTAR_PARAMETROEVALUACION|PARAMETROEVALUACION|MAX(CODIGO_PEV)"
+    consultaParametros = "CONSULTAR_PARAMETROEVALUACION|PARAMETROEVALUACION|MAX(CAST(codigo_pev AS UNSIGNED))"
     mi_socket.send(consultaParametros.encode("utf-8"))
     result = mi_socket.recv(1024).decode("utf-8")
     result = str(result)
