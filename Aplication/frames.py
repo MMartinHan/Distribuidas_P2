@@ -514,6 +514,31 @@ class VentanaAgregarParametro(tk.Tk):
             self.btn_modificar.config(state=tk.DISABLED)
             self.btn_eliminar.config(state=tk.DISABLED)
 
+class VentanaDetalleEvaluacion(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de motivo")
+        self.geometry("900x400")
+        self.create_widgets()
+        
+    def create_widgets(self):
+        
+        self.label_cedula = tk.Label(self, text="Cedula del candidato: ")
+        self.label_cedula.pack()
+        self.label_cedula.place(x=10, y=10)
+        self.text_cedula = tk.StringVar()
+        self.label_cedula2 = tk.Entry(self, textvariable=self.text_cedula)
+        self.label_cedula2.pack()
+        self.label_cedula2.place(x=150, y=10)
+        
+        self.label_CPE = tk.Label(self, text="Codigo del parametro de evaluacion: ")
+        self.label_CPE.pack()
+        self.label_CPE.place(x=10, y=40)
+        self.text_CPE = tk.StringVar()
+        self.label_CPE2 = tk.Entry(self, textvariable=self.text_CPE)
+        self.label_CPE2.pack()
+        self.label_CPE2.place(x=250, y=40)
+    
 class VentanaNomina(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -897,6 +922,15 @@ class VentanaOpcionesNomina(tk.Tk):
         abrir_ventana(VentanaNomina)
         
     def reseterar_campos(self):
+        self.text_motivo.set("")
+        self.text_cedula.set("")
+        self.text_nomina.set("")
+        self.entry_fecha.delete(0, tk.END)
+        self.entry_fecha.config(state=tk.DISABLED)
+        self.entry_detalle.delete(0, tk.END)
+        self.entry_detalle.config(state=tk.DISABLED)
+        self.entry_valor.delete(0, tk.END)
+        self.entry_valor.config(state=tk.DISABLED)
         self.rellenar_tabla()
         
     def rellenar_tabla(self):
@@ -2504,9 +2538,5 @@ class estadoResultados(tk.Tk):
         return data_decoded
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
-<<<<<<< HEAD
-ventana = estadoResultados()
-=======
 ventana = VentanaLogin()
->>>>>>> b89a5c3ea30bf40c45e555f64c9cd4252d9e5eb4
 ventana.mainloop()
