@@ -8,7 +8,7 @@ def crear_socket():
     
 def generar_id():
     mi_socket = crear_socket()
-    consultaMotivos = "CONSULTAR_MOTIVO|MOTIVO|MAX(CODIGO_MOT)"
+    consultaMotivos = "CONSULTAR_MOTIVO|MOTIVO|MAX(CAST(codigo_mot AS UNSIGNED))"
     mi_socket.send(consultaMotivos.encode("utf-8"))
     result = mi_socket.recv(1024).decode("utf-8")
     result = str(result)
@@ -16,7 +16,8 @@ def generar_id():
     if result == "None":
         id = "1"  
     else:
-        result = result[1:-1]
+        
+        print(result)
         id = int(result)
         id += 1
         id = str(id)

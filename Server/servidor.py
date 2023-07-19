@@ -341,6 +341,30 @@ while True:
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_TC_NOMBRE":
+        sql = "SELECT * FROM " + sql_query[1] + " WHERE NOMBRE_TC='" + sql_query[3] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_CUENTA_NOMBRE":
+        sql = "SELECT * FROM " + sql_query[1] + " WHERE NOMBRE_CUE='" + sql_query[3] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_COMPROBANTE_OBSERVACION":
+        sql = "SELECT CODIGO_COM, FECHA_COM, OBSERVACIONES_COM FROM " + sql_query[1] + " WHERE OBSERVACIONES_COM='" + sql_query[3] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
     elif sql_query[0]=="OBTENER_NOMBRE_CUE":
         print("Obtener nombre tipo cuenta")
         sql = "SELECT "+sql_query[2]+" FROM " + sql_query[1] + " WHERE CODIGO_CUE=" + sql_query[3]

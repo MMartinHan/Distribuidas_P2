@@ -35,13 +35,14 @@ def generar_id_tipo_cuenta():
 
 def generar_id_cuenta():
     mi_socket = crear_socket()
-    consultaMotivos = "CONSULTAR|CUENTA|MAX(CODIGO_CUE)"
+    consultaMotivos = "CONSULTAR|CUENTA|MAX(CAST(codigo_cue AS UNSIGNED))"
     mi_socket.send(consultaMotivos.encode("utf-8"))
     data = b''
     data += mi_socket.recv(1024)
     result = pickle.loads(data)
     result = str(result)
-    result = result[3:-4]
+    print(result)
+    result = result[2:-3]
     print(result)
     print(type(result))
     if result == "on":
