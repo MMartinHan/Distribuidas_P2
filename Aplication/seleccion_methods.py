@@ -1,4 +1,3 @@
-from db import conexion
 import socket
 import pickle
 
