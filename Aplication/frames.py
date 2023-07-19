@@ -42,13 +42,21 @@ class VentanaLogin(tk.Tk):
     def login(self):
         usuario = self.entrada_usuario.get()
         contrasena = self.entrada_contrasena.get()
-        if usuario == "admin" and contrasena == "admin":
+        consulta = "COMPROBAR_USUARIO|USUARIO|"+usuario+"|"+contrasena
+        mi_socket = crear_socket()
+        mi_socket.send(consulta.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        mi_socket.close()
+        if len(data_decoded) == 0:
+            messagebox.showinfo(message="Usuario o contraseña incorrectos", title="Error")
+        else:
             self.entrada_usuario.delete(0, 'end')
             self.entrada_contrasena.delete(0, 'end')
             cerrar_ventana(self)
             abrir_ventana(VentanaOpciones)
-        else:
-            self.espacio_blanco.config(text="Usuario o contraseña incorrectos")
             
     def registrar_usuario(self):
         cerrar_ventana(self)
@@ -73,8 +81,40 @@ class VentanaRegistro(tk.Tk):
         self.espacio_blanco = tk.Label(self, text="")
         self.espacio_blanco.pack()
         
-        self.boton_registrar = tk.Button(self, text="Registrar")
+        self.boton_registrar = tk.Button(self, text="Registrar", command=self.registrar)
         self.boton_registrar.pack()
+        
+        self.boton_registrar = tk.Button(self, text="Regresar", command=self.regresar)
+        self.boton_registrar.pack()
+        
+    def regresar(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaLogin)
+        
+    def registrar(self):
+        usuario = self.entrada_usuario.get()
+        contrasena = self.entrada_contrasena.get()
+        comprobar = "OBTENER_USUARIOS|USUARIO|"+usuario
+        mi_socket = crear_socket()
+        mi_socket.send(comprobar.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        mi_socket.close()
+        if len(data_decoded) == 0:
+            envioUsuario = "INGRESAR|USUARIO|(NOMBRE_USU, CLAVE_USU)|"+usuario+","+contrasena
+            mi_socket = crear_socket()
+            mi_socket.send(envioUsuario.encode("utf-8"))
+            respuesta = mi_socket.recv(1024)
+            respuesta = respuesta.decode("utf-8")
+            print(respuesta)
+            mi_socket.close()
+            messagebox.showinfo(message="Usuario registrado", title="Registro")
+            self.entrada_usuario.delete(0, 'end')
+            self.entrada_contrasena.delete(0, 'end')
+        else:
+            messagebox.showinfo(message="El usuario ya existe", title="Error")
+        
            
 class VentanaOpciones(tk.Tk):
     def __init__(self):
@@ -2212,5 +2252,5 @@ class ventanaModificarAsiento(tk.Tk):
             self.entry_monto_asiento.delete(0, tk.END)
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
-ventana = VentanaAsiento()
+ventana = VentanaLogin()
 ventana.mainloop()

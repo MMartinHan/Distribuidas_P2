@@ -32,7 +32,24 @@ while True:
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
 
-
+    elif sql_query[0]=="COMPROBAR_USUARIO":
+        print("Comprobar usuario")
+        sql = "SELECT * FROM " + sql_query[1] + " WHERE NOMBRE_USU='" + sql_query[2] + "' AND CLAVE_USU='" + sql_query[3] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    
+    elif sql_query[0]=="OBTENER_USUARIOS":
+        print("Obtener usuarios")
+        sql = "SELECT NOMBRE_USU FROM " + sql_query[1] + " WHERE NOMBRE_USU='" + sql_query[2] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+        
     #CANDIDATO
     elif sql_query[0]=="CONSULTAR_CAN":
         print("Consultar candidato")
