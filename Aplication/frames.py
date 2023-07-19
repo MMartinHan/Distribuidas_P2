@@ -597,13 +597,29 @@ class VentanaVerReporte(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Reporte de empleados y salarios")
-        self.geometry("900x300")
+        self.geometry("900x400")
         self.create_widgets()
-        self.rellenar_tabla()
+        #self.rellenar_tabla()
         
     def create_widgets(self):
         
-        self.label_tabla = tk.Label(self.master, text="Tabla de empleados y salarios")
+        self.label_fecha_inicio = tk.Label(self, text="Fecha de inicio")
+        self.label_fecha_inicio.pack()
+        self.label_fecha_inicio.place(x=10, y=10)
+        self.entry_fecha_inicio = tk.Entry(self)
+        self.entry_fecha_inicio.pack()
+        self.entry_fecha_inicio.place(x=100, y=10)
+        self.label_fecha_fin = tk.Label(self, text="Fecha de fin")
+        self.label_fecha_fin.pack()
+        self.label_fecha_fin.place(x=10, y=40)
+        self.entry_fecha_fin = tk.Entry(self)
+        self.entry_fecha_fin.pack()
+        self.entry_fecha_fin.place(x=100, y=40)
+        self.btn_reporte = tk.Button(self, text="Generar reporte", command=self.generar_reporte)
+        self.btn_reporte.pack()
+        self.btn_reporte.place(x=10, y=70)
+        
+        self.label_tabla = tk.Label(self.master, text="Tabla de empleados y salarios",state=tk.DISABLED)
         self.label_tabla.pack()
         self.treeview_reporte = ttk.Treeview(self.master, columns=("codigo", "nombre", "apellido", "salario"), show="headings")
         self.treeview_reporte.heading("codigo", text="Código")
@@ -615,9 +631,11 @@ class VentanaVerReporte(tk.Tk):
         self.treeview_reporte.column("apellido", anchor=tk.CENTER)
         self.treeview_reporte.column("salario", anchor=tk.CENTER)
         self.treeview_reporte.pack()
+        self.treeview_reporte.place(x=10, y=100)
         
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.regresar)
         self.btn_regresar.pack()
+        self.btn_regresar.place(x=10, y=350)
        
     def regresar(self):
         cerrar_ventana(self)
@@ -626,6 +644,24 @@ class VentanaVerReporte(tk.Tk):
     def rellenar_tabla(self):
         mi_socket = crear_socket()
         datosReporte = "CONSULTA_SALARIOS|EMPLEADO"
+        mi_socket.send(datosReporte.encode("utf-8"))
+        self.treeview_reporte.delete(*self.treeview_reporte.get_children())
+        data = b''
+        while True:
+            chunk = mi_socket.recv(1024)
+            if not chunk:
+                break
+            data += chunk
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_reporte.insert('', 'end', values=motivo)
+        mi_socket.close()
+    
+    def generar_reporte(self):
+        fecha_inicio = self.entry_fecha_inicio.get()
+        fecha_fin = self.entry_fecha_fin.get()
+        mi_socket = crear_socket()
+        datosReporte = "CONSULTA_SALARIOS|EMPLEADO|"+fecha_inicio+"|"+fecha_fin
         mi_socket.send(datosReporte.encode("utf-8"))
         self.treeview_reporte.delete(*self.treeview_reporte.get_children())
         data = b''
@@ -717,7 +753,7 @@ class VentanaDetalleNomina(tk.Tk):
         mi_socket = crear_socket()
         constultaJoin = "JOIN|MOTIVO|EMPLEADO"
         mi_socket.send(constultaJoin.encode("utf-8"))
-        self.treeview_detalle.delete(*self.treeview_detalle.get_children())
+        #self.treeview_detalle.delete(*self.treeview_detalle.get_children())
         data = b''
         data += mi_socket.recv(1024)
         print(data)

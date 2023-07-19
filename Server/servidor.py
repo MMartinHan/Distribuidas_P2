@@ -246,7 +246,7 @@ while True:
     
     elif sql_query[0] == "CONSULTA_SALARIOS":
         print("Consultar sueldo")
-        sql = "SELECT CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, SUELDO_EMP FROM " + sql_query[1]
+        sql = "SELECT CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, SUELDO_EMP FROM " + sql_query[1]+" WHERE FECHA_ING_EMP >= '"+sql_query[2]+"' AND FECHA_ING_EMP <= '"+sql_query[3]+"'"
         resultado = per.persistencia_2(sql)
         print(resultado)
         resultadoAux = pickle.dumps(resultado)
