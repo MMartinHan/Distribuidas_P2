@@ -118,6 +118,14 @@ while True:
         else:
             conexion.send("Error al ejecutar la orden".encode("utf-8"))
     #EVALUACION
+    elif sql_query[0]=="BUSCAR_PARAMETROS":
+        sql = "select c.cedula_can, c.nombre_can, c.apellido_can, pev.codigo_pev, pev.nombre_pev, pev.puntajemaximo_pev from candidato c join parametroevaluacion pev where c.CEDULA_CAN = "+sql_query[3]+" and pev.CEDULA_CAN = "+sql_query[3]
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
     elif sql_query[0]=="OBTENER_PARAMETROEVALUACION":
         print("Obtener parametro de evaluacion")
         sql = "SELECT CEDULA_CAN, CODIGO_PEV FROM " + sql_query[1] 

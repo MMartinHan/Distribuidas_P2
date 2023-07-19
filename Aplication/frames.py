@@ -209,62 +209,111 @@ class VentanaSeleccion(tk.Tk):
         abrir_ventana(VentanaAgregarEvaluacion)
 
 class VentanaAgregarEvaluacion(tk.Tk):
-    def __init__(self, master=None):
-        super().__init__(master)
+    def __init__(self):
+        super().__init__()
         self.title("Pantalla de evaluación")
-        self.master = master
-        self.geometry("1100x500")
+        self.geometry("1200x730")
         self.candidatos = []
         self.create_widgets()
-        self.rellenar_tabla()
+        #self.rellenar_tabla()
         
     def create_widgets(self):
-        self.label_numero_evaluacion = tk.Label(self.master, text="Número de evaluación:")
+        self.label_numero_evaluacion = tk.Label(self, text="Número de evaluación:")
         self.label_numero_evaluacion.pack()
         self.label_id = tk.StringVar()
-        self.entry_numero_evaluacion = tk.Label(self.master,justify=tk.CENTER,textvariable=self.label_id)
+        self.entry_numero_evaluacion = tk.Label(self,justify=tk.CENTER,textvariable=self.label_id)
         self.label_id.set(sm.generar_id_evaluacion())
         self.entry_numero_evaluacion.pack()
         self.label_numero_evaluacion.place(x=10, y=10)
         self.entry_numero_evaluacion.place(x=150, y=10)
         
-        self.label_fecha = tk.Label(self.master, text="Fecha de evaluación:")
+        self.label_fecha = tk.Label(self, text="Fecha de evaluación:")
         self.label_fecha.pack()
-        self.entry_fecha = tk.Entry(self.master)
+        self.entry_fecha = tk.Entry(self)
         self.entry_fecha.pack()
         self.label_fecha.place(x=10, y=40)
         self.entry_fecha.place(x=150, y=40)
 
-        self.label_candidato = tk.Label(self.master, text="Escoja al candidato")
+        self.label_candidato = tk.Label(self, text="Escoja al candidato")
         self.label_candidato.pack()
+        self.boton_buscar = tk.Button(self, text="Buscar parámetros del candidato", command=self.buscar_parametros)
+        self.boton_buscar.pack()
         op = self.rellenar_combobox()
         opcion_seleccionada = tk.StringVar()
-        self.combo_candidato = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
+        self.combo_candidato = ttk.Combobox(self, textvariable=opcion_seleccionada, values=op, state="readonly")
         self.combo_candidato.pack()
         self.label_candidato.place(x=10, y=70)
         self.combo_candidato.place(x=150, y=70)
-
-        self.treeview_evaluacion = ttk.Treeview(self.master, columns=("cedula_can", "nombre_can", "apellido_can", "codigo_pev", "nombre_pev", "puntaje"), show="headings")
+        
+        self.treeview_candidato = ttk.Treeview(self, columns=("cedula_can", "nombre_can", "apellido_can", "codigo_pev", "nombre_pev", "puntaje"))
+        self.treeview_candidato.heading("#0", text = "", anchor = "w")
+        self.treeview_candidato.heading("cedula_can", text="Cedula candidato")
+        self.treeview_candidato.heading("nombre_can", text="Nombre candidato")
+        self.treeview_candidato.heading("apellido_can", text="Apellido candidato")
+        self.treeview_candidato.heading("codigo_pev", text="Codigo parametro de evaluación")
+        self.treeview_candidato.heading("nombre_pev", text="Nombre parametro de evaluación")
+        self.treeview_candidato.heading("puntaje", text="Puntaje")
+        self.treeview_candidato.column("#0", width=0, stretch="no")
+        self.treeview_candidato.pack()
+        self.treeview_candidato.place(x=10, y=100)
+        
+        self.label_codigo_pev = tk.Label(self, text="Código PEV:")  
+        self.label_codigo_pev.pack()
+        self.label_codigo_pev.place(x=10, y=350)
+        self.entry_codigo_pev = tk.Entry(self,state=tk.DISABLED)
+        self.entry_codigo_pev.pack()
+        self.entry_codigo_pev.place(x=150, y=350)
+        
+        self.label_can = tk.Label(self, text="Candidato:")  
+        self.label_can.pack()
+        self.label_can.place(x=10, y=380)
+        self.entry_can = tk.Entry(self,width=50,state=tk.DISABLED)
+        self.entry_can.pack()
+        self.entry_can.place(x=150, y=380)
+        
+        self.label_calificacion = tk.Label(self, text="Calificación:")
+        self.label_calificacion.pack()
+        self.entry_calificacion = tk.Entry(self)
+        self.entry_calificacion.pack()
+        self.label_calificacion.place(x=10, y=410)
+        self.entry_calificacion.place(x=150, y=410)
+        
+        self.btn_guardar_calificacion = tk.Button(self.master, text="Guardar")
+        self.btn_guardar_calificacion.pack()
+        self.btn_guardar_calificacion.place(x=10, y=440)
+        
+        self.treeview_evaluacion = ttk.Treeview(self, columns=("cedula_can", "codigo_pev", "numero_eva", "fecha_eva", "calificacion_eva"))
+        self.treeview_evaluacion.heading("#0", text = "", anchor = "w")
         self.treeview_evaluacion.heading("cedula_can", text="Cedula candidato")
-        self.treeview_evaluacion.heading("nombre_can", text="Nombre candidato")
-        self.treeview_evaluacion.heading("apellido_can", text="Apellido candidato")
         self.treeview_evaluacion.heading("codigo_pev", text="Codigo parametro de evaluación")
-        self.treeview_evaluacion.heading("nombre_pev", text="Nombre parametro de evaluación")
-        self.treeview_evaluacion.heading("puntaje_pev", text="Puntaje")
-        self.treeview_evaluacion.column("cedula_can", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("nombre_can", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("apellido_can", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("codigo_pev", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("nombre_pev", anchor=tk.CENTER)
-        self.treeview_evaluacion.column("puntaje_pev", anchor=tk.CENTER)
+        self.treeview_evaluacion.heading("numero_eva", text="Número de evaluación")
+        self.treeview_evaluacion.heading("fecha_eva", text="Fecha evaluación")
+        self.treeview_evaluacion.heading("calificacion_eva", text="Calificación")
+        self.treeview_evaluacion.column("#0", width=0, stretch="no")
         self.treeview_evaluacion.pack()
-        self.treeview_evaluacion.place(x=10, y=100)
+        self.treeview_evaluacion.place(x=10, y=470)
 
         self.treeview_evaluacion.bind("<<TreeviewSelect>>")
 
-        self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack()
-        
+        self.btn_regresar.place(x=10, y=700)
+
+    def buscar_parametros(self):
+        candidato = self.combo_candidato.get()
+        mi_socket = crear_socket()
+        consultaParametros = "BUSCAR_PARAMETROS|CANDIDATO|PARAMETROEVALUACION|'"+candidato+"'"
+        print(consultaParametros)
+        mi_socket.send(consultaParametros.encode("utf-8"))
+        self.treeview_candidato.delete(*self.treeview_candidato.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        print(data)
+        data_decoded = pickle.loads(data)
+        for motivo in data_decoded:
+            self.treeview_candidato.insert('', 'end', values=motivo)
+        mi_socket.close()
+
     def rellenar_combobox(self):
         opciones = sm.consultar_candidatos()
         return opciones
