@@ -179,6 +179,8 @@ class VentanaSeleccion(tk.Tk):
         
         self.boton_opcion_3 = tk.Button(self.frame_contenedor, text="Detalles evaluación", command=self.agregar_evaluacion)
         self.boton_opcion_3.pack(side="left", padx=10)
+        self.boton_opcionesEva = tk.Button(self.frame_contenedor, text="Opciones de evaluación", command=self.abrir_ventana_opciones_evaluacion)
+        self.boton_opcionesEva.pack(side="left", padx=10)
         
         self.etiqueta_opciones = tk.Label(self, text="Opciones de Reportes")
         self.etiqueta_opciones.pack()
@@ -207,6 +209,10 @@ class VentanaSeleccion(tk.Tk):
     def agregar_evaluacion(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaAgregarEvaluacion)
+    
+    def abrir_ventana_opciones_evaluacion(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaDetalleEvaluacion)
 
 class VentanaAgregarEvaluacion(tk.Tk):
     def __init__(self, master=None):
@@ -672,7 +678,7 @@ class VentanaDetalleEvaluacion(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Pantalla de motivo")
-        self.geometry("900x400")
+        self.geometry("1025x500")
         self.create_widgets()
         
     def create_widgets(self):
@@ -681,7 +687,7 @@ class VentanaDetalleEvaluacion(tk.Tk):
         self.label_cedula.pack()
         self.label_cedula.place(x=10, y=10)
         self.text_cedula = tk.StringVar()
-        self.label_cedula2 = tk.Entry(self, textvariable=self.text_cedula)
+        self.label_cedula2 = tk.Label(self, textvariable=self.text_cedula)
         self.label_cedula2.pack()
         self.label_cedula2.place(x=150, y=10)
         
@@ -689,9 +695,83 @@ class VentanaDetalleEvaluacion(tk.Tk):
         self.label_CPE.pack()
         self.label_CPE.place(x=10, y=40)
         self.text_CPE = tk.StringVar()
-        self.label_CPE2 = tk.Entry(self, textvariable=self.text_CPE)
+        self.label_CPE2 = tk.Label(self, textvariable=self.text_CPE)
         self.label_CPE2.pack()
-        self.label_CPE2.place(x=250, y=40)
+        self.label_CPE2.place(x=220, y=40)
+        
+        self.label_NE = tk.Label(self, text="Numero de evaluacion: ")
+        self.label_NE.pack()
+        self.label_NE.place(x=10, y=70)
+        self.text_NE = tk.StringVar()
+        self.label_NE2 = tk.Label(self, textvariable=self.text_NE)
+        self.label_NE2.pack()
+        self.label_NE2.place(x=150, y=70)
+        
+        self.label_fecha = tk.Label(self, text="Fecha de evaluacion: ")
+        self.label_fecha.pack()
+        self.label_fecha.place(x=10, y=100)
+        self.entry_fecha = tk.Entry(self, state=tk.DISABLED)
+        self.entry_fecha.pack()
+        self.entry_fecha.place(x=150, y=100)
+        
+        self.label_calificacion = tk.Label(self, text="Calificacion: ")
+        self.label_calificacion.pack()
+        self.label_calificacion.place(x=10, y=130)
+        self.entry_calificacion = tk.Entry(self, state=tk.DISABLED)
+        self.entry_calificacion.pack()
+        self.entry_calificacion.place(x=150, y=130)
+        
+        self.label_buscar = tk.Label(self, text="Buscar evaluacion por codigo: ")
+        self.label_buscar.pack()
+        self.label_buscar.place(x=400, y=10)
+        self.entry_buscar = tk.Entry(self)
+        self.entry_buscar.pack()
+        self.entry_buscar.place(x=600, y=10)
+        self.btn_buscar = tk.Button(self, text="Buscar")
+        self.btn_buscar.pack()
+        self.btn_buscar.place(x=400, y=40)
+        
+        self.label_contratar = tk.Label(self, text="Numero de candidatos a contratar: ")
+        self.label_contratar.pack()
+        self.label_contratar.place(x=400, y=70)
+        self.entry_contratar = tk.Entry(self)
+        self.entry_contratar.pack()
+        self.entry_contratar.place(x=600, y=70)
+        self.btn_contratar = tk.Button(self, text="Contratar")
+        self.btn_contratar.pack()
+        self.btn_contratar.place(x=400, y=100)
+        
+        self.treeview_evaluacion = ttk.Treeview(self, columns=("cedula", "codigoPE", "numeroEV", "fecha", "calificacion"), show="headings")
+        self.treeview_evaluacion.heading("cedula", text="Cedula")
+        self.treeview_evaluacion.heading("codigoPE", text="Codigo Parametro Evaluacion")
+        self.treeview_evaluacion.heading("numeroEV", text="Numero Evaluacion")
+        self.treeview_evaluacion.heading("fecha", text="Fecha")
+        self.treeview_evaluacion.heading("calificacion", text="Calificacion")
+        self.treeview_evaluacion.column("cedula", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("codigoPE", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("numeroEV", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("fecha", anchor=tk.CENTER)
+        self.treeview_evaluacion.column("calificacion", anchor=tk.CENTER)
+        self.treeview_evaluacion.pack()
+        self.treeview_evaluacion.place(x=10, y=160)
+        
+        self.btn_modificar = tk.Button(self, text="Modificar", state=tk.DISABLED)
+        self.btn_modificar.pack()
+        self.btn_modificar.place(x=10, y=400)
+        self.btn_eliminar = tk.Button(self, text="Eliminar", state=tk.DISABLED)
+        self.btn_eliminar.pack()
+        self.btn_eliminar.place(x=80, y=400)
+        self.btn_resetear = tk.Button(self, text="Resetear campos")
+        self.btn_resetear.pack()
+        self.btn_resetear.place(x=150, y=400)
+        self.btn_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
+        self.btn_regresar.pack()
+        self.btn_regresar.place(x=950, y=400)
+        
+    def mover_inicio(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaSeleccion)
+        
     
 class VentanaNomina(tk.Tk):
     def __init__(self):
