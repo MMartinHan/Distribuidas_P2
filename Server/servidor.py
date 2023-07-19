@@ -10,11 +10,9 @@ mi_socket.listen(10)
 while True:
     conexion, addr = mi_socket.accept()
     print("Nueva conexión establecida!")
-    print(addr)
     # Esperar la respuesta del cliente
     respuesta = conexion.recv(1024)
     respuesta = respuesta.decode("utf-8")
-    print(respuesta)
     print(respuesta)
     sql_query = respuesta.split("|")
     if sql_query[0]=="INGRESAR":
@@ -381,9 +379,27 @@ while True:
         resultadoAux = pickle.dumps(resultado)
         print(resultadoAux)
         conexion.send(resultadoAux)
-    elif sql_query[0]=="MODIFICAR_COMPROBANTE":
-        sql = "UPDATE "+sql_query[1]+" SET CODIGO_TC='"+sql_query[2]+"', CODIGO_CUE='"+sql_query[3]+"', FECHA_COM="+sql_query[5]+", OBSERVACION_COM='"+sql_query[6]+"', CANTIDAD_DEBE_COM="+sql_query[7]+", CANTIDAD_HABER_COM="+sql_query[8]+" WHERE CODIGO_COM="+sql_query[4]
+    elif sql_query[0]=="CONSULTAR_INGRESOS":
+        sql = "SELECT CODIGO_CUE, CANTIDAD_DEBE_COM, CANTIDAD_HABER_COM FROM "+sql_query[1]+" WHERE CODIGO_TC = '3' AND FECHA_COM > '"+sql_query[2] + "' AND FECHA_COM < '"+sql_query[3] + "'"
         print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="CONSULTAR_GASTOS":
+        sql = "SELECT CODIGO_CUE, CANTIDAD_DEBE_COM, CANTIDAD_HABER_COM FROM "+sql_query[1]+" WHERE CODIGO_TC = '1' AND FECHA_COM > '"+sql_query[2] + "' AND FECHA_COM < '"+sql_query[3] + "'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    elif sql_query[0]=="MODIFICAR_COMPROBANTE":
+        sql = "UPDATE "+sql_query[1]+" SET FECHA_COM='"+sql_query[4]+"', OBSERVACIONES_COM='"+sql_query[5]+"', CANTIDAD_DEBE_COM="+sql_query[6]+", CANTIDAD_HABER_COM="+sql_query[7]+" WHERE CODIGO_COM="+sql_query[8] + " AND CODIGO_TC="+sql_query[2] + " AND CODIGO_CUE="+sql_query[3]
+        print(sql)
+        if per.persistencia(sql) == True:
+            conexion.send("Orden ejecutada con exito".encode("utf-8"))
+        else:
+            conexion.send("Error al ejecutar la orden".encode("utf-8"))
     elif sql_query[0]=="VERIFICAR_ASIENTO":
         bandera = rn.verificar_asiento(sql_query[1], sql_query[2])
         bandera = int(bandera)
@@ -413,4 +429,5 @@ while True:
         listaAsiento.append(nominaPagar)
         resultadoAux = pickle.dumps(listaAsiento)
         conexion.send(resultadoAux)
+        
     conexion.close()

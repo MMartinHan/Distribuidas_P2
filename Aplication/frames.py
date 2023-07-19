@@ -277,7 +277,6 @@ class VentanaAgregarCandidato(tk.Tk):
         self.treeview_candidatos.delete(*self.treeview_candidatos.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for candidato in data_decoded:
             self.treeview_candidatos.insert('', 'end', values=candidato)
@@ -297,7 +296,6 @@ class VentanaAgregarCandidato(tk.Tk):
         mi_socket.send(ingresoCandidato.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
-        print(respuesta)
         mi_socket.close()
         
         self.entry_cedula.delete(0, 'end')  # Borrar contenido del campo de entrada
@@ -355,7 +353,6 @@ class VentanaAgregarCandidato(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             candidato = self.treeview_candidatos.item(indice)['values']
-            print(candidato)
             self.entry_cedula.delete(0, tk.END)
             self.entry_cedula.insert(tk.END, candidato[0])
             self.entry_nombre.delete(0, tk.END)
@@ -438,7 +435,6 @@ class VentanaAgregarParametro(tk.Tk):
         self.treeview_parametros.delete(*self.treeview_parametros.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_parametros.insert('', 'end', values=motivo)
@@ -450,12 +446,10 @@ class VentanaAgregarParametro(tk.Tk):
         puntaje_maximo = self.entry_puntaje_maximo.get()
         id = sm.generar_id_parametroEvaluacion()
         ingresoParametro = "INGRESAR|PARAMETROEVALUACION|(CEDULA_CAN,CODIGO_PEV,NOMBRE_PEV,PUNTAJEMAXIMO_PEV)|"+ str(candidato) + ", " + id + ", "+ str(nombre_parametro) +", " + str(puntaje_maximo)
-        print(ingresoParametro)
         mi_socket = crear_socket()
         mi_socket.send(ingresoParametro.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
-        print(respuesta)
         mi_socket.close()
         
         self.combo_candidato.set('')  # Borrar contenido del campo de entrada
@@ -475,7 +469,6 @@ class VentanaAgregarParametro(tk.Tk):
             nombre_nuevo = self.entry_nombre_parametro.get()
             puntaje_nuevo = self.entry_puntaje_maximo.get()
             modificarParametro = "MODIFICAR_PARAMETRO|PARAMETROEVALUACION|"+str(candidato_nuevo)+"|"+nombre_nuevo+"|"+str(puntaje_nuevo)+"|"+str(codigo_actual)
-            print(modificarParametro)
             mi_socket = crear_socket()
             mi_socket.send(modificarParametro.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -511,7 +504,6 @@ class VentanaAgregarParametro(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             parametro = self.treeview_parametros.item(indice)['values']
-            print(parametro)
             self.combo_candidato.set('')
             self.combo_candidato.set(parametro[0])
             self.entry_nombre_parametro.delete(0, tk.END)
@@ -756,62 +748,41 @@ class VentanaDetalleNomina(tk.Tk):
         #self.treeview_detalle.delete(*self.treeview_detalle.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         combo = self.combo_empleado.get()
-        print(combo)
-        print(combo[0])
         nuevo = combo.split(" ")
-        print(nuevo[0])
         for i in range(len(data_decoded)):
             if nuevo[0] == str(data_decoded[i][2]):
-                print("entro")
                 self.entry_datos.config(text="Cedula: "+str(nuevo[0])+", Nombre: "+str(nuevo[1])+", Apellido: "+str(nuevo[2]))
                 self.treeview_detalle.insert("", tk.END, values=(data_decoded[i][1], data_decoded[i][6], "Operacion realizada el: "+str(data_decoded[i][5])))
                 self.combo_empleado.set("")
                 item = self.treeview_detalle.get_children()
                 for j in item:
-                    print(self.treeview_detalle.item(j)["values"])
                     x = self.treeview_detalle.item(j)["values"]
-                    print(data_decoded[i][0])
-                    print(str(nuevo[0]))
-                    print(str(self.label_id.get()))
-                    print(x[2])
-                    print(data_decoded[i][6])
                     ingresoReporte = "INGRESAR|NOMINA|(CODIGO_MOT,CEDULA_EMP,CODIGO_NOM,FECHA_NOM,DETALLE_NOM,SUELDO_EMP_NOM)|"+str(data_decoded[i][0])+","+str(nuevo[0])+","+str(self.label_id.get())+","+str(self.label_fecha.get())+","+str(x[2])+","+str(data_decoded[i][6])
-                    print(ingresoReporte)
                     mi_socket = crear_socket()
                     mi_socket.send(ingresoReporte.encode("utf-8"))
                     respuesta = mi_socket.recv(1024)
                     respuesta = respuesta.decode("utf-8")
                     self.label_id.set("")
                     self.label_id.set(nm.generar_id_detalle())
-                    print(respuesta)
                     mi_socket.close()
         
-    def generar_asiento_contable(self): 
-        print("entro")
+    def generar_asiento_contable(self):
         mi_socket = crear_socket()
         item = self.treeview_detalle.get_children()
-        print(item)
         for i in item:
-            print("entro1")
             x = self.treeview_detalle.item(i)["values"]
             sueldo = x[1]
             solicitud = "OBTENER_ASIENTO_AUTOMATICO|"+str(sueldo)
-            print(solicitud)
             mi_socket.send(solicitud.encode("utf-8"))
             data = b''
             data += mi_socket.recv(1024)
-            print(data)
             data_decoded = pickle.loads(data)
-            print(data_decoded)
-            print(type(data_decoded))
             mi_socket.close()
             item = self.treeview_detalle.get_children()
             fila = []
             for i in item:
-                print(self.treeview_detalle.item(i)["values"])
                 fila = self.treeview_detalle.item(i)["values"]
             salario_empleado = float(fila[1])
             data_decoded.append(salario_empleado)
@@ -935,7 +906,6 @@ class VentanaOpcionesNomina(tk.Tk):
         self.treeview_reporte.delete(*self.treeview_reporte.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_reporte.insert('', 'end', values=motivo)
@@ -975,7 +945,6 @@ class VentanaOpcionesNomina(tk.Tk):
             detalle_nuevo = self.entry_detalle.get()
             valor_nuevo = self.entry_valor.get()
             modificarReporte = "MODIFICAR_REPORTE|NOMINA|"+str(fecha_nueva)+"|"+str(detalle_nuevo)+"|"+str(valor_nuevo)+"|"+str(codigo_nom_actual)
-            print(modificarReporte)
             mi_socket = crear_socket()
             mi_socket.send(modificarReporte.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -1020,7 +989,6 @@ class VentanaOpcionesNomina(tk.Tk):
             detalle_nuevo = self.entry_detalle.get()
             valor_nuevo = self.entry_valor.get()
             modificarReporte = "ELIMINAR|NOMINA|CODIGO_NOM|"+str(codigo_nom_actual)
-            print(modificarReporte)
             mi_socket = crear_socket()
             mi_socket.send(modificarReporte.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -1105,7 +1073,6 @@ class VentanaAgregarMotivo(tk.Tk):
         self.treeview_motivos.delete(*self.treeview_motivos.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_motivos.insert('', 'end', values=motivo)
@@ -1123,7 +1090,6 @@ class VentanaAgregarMotivo(tk.Tk):
         mi_socket.send(ingresoMotivo.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
-        print(respuesta)
         mi_socket.close()
         self.entry_nombre_motivo.delete(0, 'end')  # Borrar contenido del campo de entrada
         self.rellenar_tabla()
@@ -1319,7 +1285,6 @@ class VentanaAgregarEmpleado(tk.Tk):
         self.treeview_empleados.delete(*self.treeview_empleados.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_empleados.insert('', 'end', values=motivo)
@@ -1333,12 +1298,10 @@ class VentanaAgregarEmpleado(tk.Tk):
         fecha = self.entry_fecha.get()
         sueldo = self.entry_sueldo.get()
         ingresarEmpleado = "INGRESAR|EMPLEADO|(CODIGO_MOT, CEDULA_EMP, NOMBRE_EMP, APELLIDO_EMP, FECHA_ING_EMP, SUELDO_EMP)|"+ str(codico_mot[0]) + "," + str(cedula) + "," + str(nombre)+ ","+ str(apellido) + "," + str(fecha) + "," + str(sueldo)
-        print(ingresarEmpleado)
         mi_socket = crear_socket()
         mi_socket.send(ingresarEmpleado.encode("utf-8"))
         respuesta = mi_socket.recv(1024)
         respuesta = respuesta.decode("utf-8")
-        print(respuesta)
         mi_socket.close()
         self.combo_motivo.set('')  # Borrar contenido del campo de entrada
         self.entry_cedula.delete(0, 'end')  
@@ -1360,7 +1323,6 @@ class VentanaAgregarEmpleado(tk.Tk):
             fecha_nuevo = self.entry_fecha.get()
             sueldo_nuevo = self.entry_sueldo.get()
             modificarMotivo = "MODIFICAR_EMPLEADO|EMPLEADO|"+codico_mot_nuevo[0]+"|"+nombre_nuevo+"|"+apellido_nuevo+"|"+fecha_nuevo+"|"+str(sueldo_nuevo)+"|"+str(cedula_actual)
-            print(modificarMotivo)
             mi_socket = crear_socket()
             mi_socket.send(modificarMotivo.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
@@ -1419,7 +1381,6 @@ class VentanaAgregarEmpleado(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             empleado = self.treeview_empleados.item(indice)['values']
-            print(empleado)
             self.combo_motivo.set('')
             self.combo_motivo.set(empleado[0])
             self.entry_cedula.delete(0, tk.END)
@@ -1496,14 +1457,16 @@ class VentanaCuenta(tk.Tk):
         self.frame_contenedor = tk.Frame(self)
         self.frame_contenedor.pack(pady=10)
         
-        self.boton_opcion_12 = tk.Button(self.frame_contenedor, text="Balance general")
-        self.boton_opcion_12.pack(side="left", padx=5)
-        self.boton_opcion_13 = tk.Button(self.frame_contenedor, text="Estado de resultados")
-        self.boton_opcion_13.pack(side="left", padx=5)
+        self.boton_opcion_13 = tk.Button(self.frame_contenedor, text="Estado de resultados", command=self.verEstadoResultados)
+        self.boton_opcion_13.pack(side="left", padx=10)
         
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.boton_regresar.pack()
         
+    def verEstadoResultados(self):
+        cerrar_ventana(self)
+        abrir_ventana(estadoResultados)
+
     def ingresar_cuenta(self):
         cerrar_ventana(self)
         abrir_ventana(VentanaIngresarCuenta)
@@ -1564,7 +1527,6 @@ class VentanaIngresarTipoCuenta(tk.Tk):
         nombre_tipo_cuenta = self.entry_nombre_cuenta.get()
         id = cm.generar_id_tipo_cuenta()
         ingresoTC = "INGRESAR|TIPO_CUENTA|(CODIGO_TC,NOMBRE_TC)|"+id+","+nombre_tipo_cuenta
-        print(ingresoTC)
         mi_socket = crear_socket()
         mi_socket.send(ingresoTC.encode("utf-8"))
         respuesta = mi_socket.recv(1024).decode("utf-8")
@@ -1593,8 +1555,6 @@ class VentanaIngresarTipoCuenta(tk.Tk):
             item = self.treeview_cuentas.item(seleccion)
             codigo_actual = item['values'][0]
             nombre_actual = item['values'][1]
-            print(codigo_actual)
-            print(nombre_actual)
             codigo_actual = str(codigo_actual)
             nuevo_nombre = self.entry_nombre_cuenta.get()
             modificarMotivo = "MODIFICAR_TC|TIPO_CUENTA|"+nuevo_nombre+"|"+codigo_actual
@@ -1664,6 +1624,14 @@ class VentanaIngresarCuenta(tk.Tk):
         self.treeview_cuentas.heading("nombre_cuenta", text="NombreCuenta")
         self.treeview_cuentas.pack()
 
+        self.scrollbar = ttk.Scrollbar(self.master, orient="vertical", command=self.treeview_cuentas.yview)
+        self.treeview_cuentas.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.treeview_cuentas.configure(yscrollcommand=self.scrollbar.set)
+        self.treeview_cuentas.pack(fill=tk.BOTH, expand=True)
+
+
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_cuenta)
         self.btn_modificar.pack(side=tk.LEFT, padx=5)
 
@@ -1682,7 +1650,6 @@ class VentanaIngresarCuenta(tk.Tk):
         self.treeview_cuentas.delete(*self.treeview_cuentas.get_children())
         data = b''
         data += mi_socket.recv(1024)
-        print(data)
         data_decoded = pickle.loads(data)
         for motivo in data_decoded:
             self.treeview_cuentas.insert('', 'end', values=motivo)
@@ -1703,7 +1670,6 @@ class VentanaIngresarCuenta(tk.Tk):
         mi_socket.send(ingresarCuenta.encode("utf-8"))
         respuesta = mi_socket.recv(1024).decode("utf-8")
         mi_socket.close()
-        print(ingresarCuenta)
         self.rellenar_tabla()
     def modificar_cuenta(self):
         seleccion = self.treeview_cuentas.selection()
@@ -1715,12 +1681,10 @@ class VentanaIngresarCuenta(tk.Tk):
             codigo_tc_nuevo = self.combobox_tipo_cuenta.get()
             nombre_cuenta_nuevo = self.entry_nombre_cuenta.get()
             modificarCuenta = "MODIFICAR_CUENTA|CUENTA|"+codigo_tc_nuevo[0]+"|"+str(cuenta_actual)+"|"+nombre_cuenta_nuevo
-            print(modificarCuenta)
             mi_socket = crear_socket()
             mi_socket.send(modificarCuenta.encode("utf-8"))
             respuesta = mi_socket.recv(1024)
-            respuesta = respuesta.decode("utf-8") 
-            print(respuesta)   
+            respuesta = respuesta.decode("utf-8")  
             mi_socket.close()
             self.combobox_tipo_cuenta.set('')
             self.entry_nombre_cuenta.delete(0, tk.END)
@@ -1750,7 +1714,6 @@ class VentanaIngresarCuenta(tk.Tk):
             self.btn_eliminar.config(state=tk.NORMAL)
             indice = seleccion[0]
             cuenta = self.treeview_cuentas.item(indice)['values']
-            print(cuenta)
             self.combobox_tipo_cuenta.set('')
             self.combobox_tipo_cuenta.set(cuenta[0])
             self.entry_nombre_cuenta.delete(0, tk.END)
@@ -1778,8 +1741,8 @@ class VentanaAsiento(tk.Tk):
         self.treeview_asientos.heading("observacion", text="Observación")
         self.treeview_asientos.pack()
 
-        self.boton_eliminar_asiento = tk.Button(self, text="Eliminar asiento", state=tk.DISABLED)
-        self.boton_eliminar_asiento.pack(side=tk.TOP, pady=10)
+        self.boton_actualizar_tabla = tk.Button(self, text="Actualizar tabla", command=self.llenar_tabla)
+        self.boton_actualizar_tabla.pack(side=tk.TOP, pady=10)
 
         self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.boton_regresar.pack(side=tk.BOTTOM, pady=10)
@@ -1823,7 +1786,6 @@ class VentanaAsiento(tk.Tk):
             if not chunk:
                 break
             data += chunk
-        print(data)
         data_decoded = pickle.loads(data)
         
         codigos_com = set()
@@ -1837,7 +1799,6 @@ class VentanaAsiento(tk.Tk):
 
 class VentanaIngresarAsiento(tk.Tk):
     def __init__(self,datos_compartidos):
-        print(datos_compartidos)
         super().__init__()
         self.title("Pantalla de agregar asiento")
         self.geometry("900x450")
@@ -1847,8 +1808,6 @@ class VentanaIngresarAsiento(tk.Tk):
             self.label_numero_asiento = tk.Label(self, text="Número de asiento")
             self.entry_numero_asiento = tk.Entry(self, state="normal")
             id_asiento = cm.generar_id_asiento()
-            print(id_asiento)
-            print(type(id_asiento))
             self.entry_numero_asiento.insert(0, id_asiento)
             self.entry_numero_asiento.config(state="disabled")
             self.label_fecha_asiento = tk.Label(self, text="Fecha de asiento")
@@ -1902,8 +1861,6 @@ class VentanaIngresarAsiento(tk.Tk):
             self.label_numero_asiento = tk.Label(self, text="Número de asiento")
             self.entry_numero_asiento = tk.Entry(self, state="normal")
             id_asiento = cm.generar_id_asiento()
-            print(id_asiento)
-            print(type(id_asiento))
             self.entry_numero_asiento.insert(0, id_asiento)
             self.entry_numero_asiento.config(state="disabled")
             fecha_actual = datetime.date.today()
@@ -1957,7 +1914,6 @@ class VentanaIngresarAsiento(tk.Tk):
             self.boton_eliminar_cuenta.grid(row=7, column=1, columnspan=3, pady=10)
             self.boton_guardar_asiento.grid(row=7, column=3, columnspan=7, pady=10)
             self.boton_regresar.grid(row=7, column=5, columnspan=7, pady=10)
-            print(datos_compartidos)
             lista_total = []
             lista_gastos_sueldos=['1','1',self.entry_numero_asiento.get(),self.entry_fecha_asiento.get(),self.entry_observacion_asiento.get(),datos_compartidos[7],'0']
             lista_gastos_13=['1','2',self.entry_numero_asiento.get(),self.entry_fecha_asiento.get(),self.entry_observacion_asiento.get(),datos_compartidos[0],'0']
@@ -2047,7 +2003,6 @@ class VentanaIngresarAsiento(tk.Tk):
             observacion = self.entry_observacion_asiento.get()
             for i in self.treeview_asiento.get_children():
                 mi_socket = crear_socket()
-                print(self.treeview_asiento.item(i, "values")[0])
                 consultaCuenta = "OBTENER_CODIGO_TC|TIPO_CUENTA|CODIGO_TC|"+self.treeview_asiento.item(i, "values")[0]
                 mi_socket.send(consultaCuenta.encode("utf-8"))
                 data = b''
@@ -2055,10 +2010,9 @@ class VentanaIngresarAsiento(tk.Tk):
                 result = pickle.loads(data)
                 mi_socket.close()
                 result = str(result)
-                print(result)
                 result = result[3:-4]
-                print(result)
                 codigo_tc = result
+                print(codigo_tc)
                 
                 mi_socket = crear_socket()
                 consultaCuenta = "OBTENER_CODIGO_CUENTA|CUENTA|CODIGO_CUE|"+self.treeview_asiento.item(i, "values")[1]
@@ -2066,8 +2020,6 @@ class VentanaIngresarAsiento(tk.Tk):
                 data = b''
                 data += mi_socket.recv(1024)
                 result = pickle.loads(data)
-                print(result)
-                print(type(result))
                 mi_socket.close()
                 result = str(result)
                 result = result[3:-4]
@@ -2078,18 +2030,13 @@ class VentanaIngresarAsiento(tk.Tk):
                 mi_socket = crear_socket()
                 mi_socket.send(ingresoAsiento.encode("utf-8"))
                 result = mi_socket.recv(1024).decode("utf-8")
-                print(result)
-                print(ingresoAsiento)
         else:
             messagebox.showerror("Error", "El asiento no esta cuadrado")
             return
-        print(result)
-        print(type(result))
         pass
 
     def abrirVentanaModificar(self, event):
         item = self.treeview_asiento.identify_row(event.y)
-        print("Se hizo doble click")
 
     def llenar_combobox_cuenta(self):
         opciones = cm.consultar_cuenta()
@@ -2252,8 +2199,6 @@ class ventanaModificarAsiento(tk.Tk):
         for i in self.treeview_asiento.get_children():
                 cantidad_debe += float(self.treeview_asiento.item(i, "values")[2])
                 cantidad_haber += float(self.treeview_asiento.item(i, "values")[3])
-        print(cantidad_debe)
-        print(cantidad_haber)
         mi_socket = crear_socket()
         validacion = "VERIFICAR_ASIENTO|"+str(cantidad_debe)+"|"+str(cantidad_haber)
         mi_socket.send(validacion.encode("utf-8"))
@@ -2267,40 +2212,46 @@ class ventanaModificarAsiento(tk.Tk):
             observacion = self.entry_observacion_asiento.get()
             for i in self.treeview_asiento.get_children():
                 codigo_tc = self.treeview_asiento.item(i, "values")[0]
+                print("dato tomado de la tabla")
+                print(codigo_tc)
                 codigo_cuenta = self.treeview_asiento.item(i, "values")[1]
                 debe = self.treeview_asiento.item(i, "values")[2]
+                print(debe)
                 haber = self.treeview_asiento.item(i, "values")[3]
+                print(haber)
                 mi_socket = crear_socket()
-                codigo_tc = "OBTENER_CODIGO_TC|TIPO_CUENTA|NOMBRE_TC|"+str(codigo_tc)
-                mi_socket.send(codigo_tc.encode("utf-8"))
+                obtenerCodigoTc = "OBTENER_CODIGO_TC|TIPO_CUENTA|CODIGO_TC|"+str(codigo_tc)
+                mi_socket.send(obtenerCodigoTc.encode("utf-8"))
                 data = b''
                 data += mi_socket.recv(1024)
                 result = pickle.loads(data)
                 mi_socket.close()
                 result = str(result)
-                print(result)
                 result = result[3:-4]
-                print(result)
                 codigo_tc = result
+                print(codigo_tc)
                 mi_socket = crear_socket()
-                codigo_cuenta = "OBTENER_CODIGO_CUE|CUENTA|NOMBRE_CUE|"+str(codigo_tc)
+                consultaCuenta = "OBTENER_CODIGO_CUENTA|CUENTA|CODIGO_CUE|"+str(codigo_cuenta)
+                mi_socket.send(consultaCuenta.encode("utf-8"))
                 data = b''
                 data += mi_socket.recv(1024)
                 result = pickle.loads(data)
-                print(result)
-                print(type(result))
                 mi_socket.close()
                 result = str(result)
                 result = result[3:-4]
+                print (result)
                 codigo_cuenta = result
-                print("Este es el codigo de tipo")
-                print(codigo_tc)
-                
+                print(codigo_cuenta)
+                modificar_comprobante = "MODIFICAR_COMPROBANTE|COMPROBANTE|"+str(codigo_tc)+"|"+str(codigo_cuenta)+"|"+str(fecha)+"|"+str(observacion)+"|"+str(debe)+"|"+str(haber)+"|"+str(codigo_comprobante)
+                mi_socket = crear_socket()
+                mi_socket.send(modificar_comprobante.encode("utf-8"))
+                print(modificar_comprobante)
+                result = mi_socket.recv(1024).decode("utf-8")
+                mi_socket.close()
+            messagebox.showinfo("Exito", "El asiento se modifico correctamente")
         else:
             messagebox.showerror("Error", "El asiento no esta cuadrado")
             return
-        print(result)
-        print(type(result))
         pass
 
     def llenar_combobox_cuenta(self):
@@ -2375,8 +2326,6 @@ class ventanaModificarAsiento(tk.Tk):
             result1 = str(result1)
             nombre_cue = result1[3:-4]
             lista_de_ejemplo[i][1] = nombre_cue
-        print(lista_de_ejemplo)
-
 
         self.entry_fecha_asiento.insert(0, str(fecha_asiento))
         self.entry_observacion_asiento.insert(0, data_decoded[0][4])
@@ -2417,6 +2366,147 @@ class ventanaModificarAsiento(tk.Tk):
             self.combo_debe_asiento.set("")
             self.entry_monto_asiento.delete(0, tk.END)
 
+class estadoResultados(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Pantalla de estado de resultados")
+        self.geometry("900x500")
+
+        self.label_titulo = tk.Label(self, text="Estado de resultados", font=("Helvetica", 12))
+        self.label_titulo.pack()
+        self.label_titulo.place(x=350, y=10)
+
+        self.label_fecha = tk.Label(self, text="Fecha de inicio")
+        self.label_fecha.pack()
+        self.label_fecha.place(x=10, y=50)
+        self.entry_fecha = tk.Entry(self)
+        self.entry_fecha.pack()
+        self.entry_fecha.place(x=10, y=70)
+
+        self.label_fecha2 = tk.Label(self, text="Fecha de fin")
+        self.label_fecha2.pack()
+        self.label_fecha2.place(x=200, y=50)
+        self.entry_fecha2 = tk.Entry(self)
+        self.entry_fecha2.pack()
+        self.entry_fecha2.place(x=200, y=70)
+
+        self.boton_buscar = tk.Button(self, text="Generar estado de resultados", command=self.generar_estado_resultados)
+        self.boton_buscar.pack()
+        self.boton_buscar.place(x=400, y=60)
+
+        self.boton_regresar = tk.Button(self, text="Regresar", command=self.mover_atras)
+        self.boton_regresar.pack()
+        self.boton_regresar.place(x=10, y=10)
+
+    def mover_atras(self):
+        cerrar_ventana(self)
+        abrir_ventana(VentanaAsiento)
+
+    def generar_estado_resultados(self):
+        self.label_ingresos = tk.Label(self, text="Ingresos", font=("Helvetica", 10))
+        self.label_ingresos.pack()
+        self.label_ingresos.place(x=10, y=100)
+
+        self.treeview_ingresos = ttk.Treeview(self, columns=("Cuenta", "Debe", "Haber"))
+        self.treeview_ingresos.heading("#0", text="", anchor="w")
+        self.treeview_ingresos.heading("Cuenta", text="Cuenta")
+        self.treeview_ingresos.heading("Debe", text="Debe")
+        self.treeview_ingresos.heading("Haber", text="Haber")
+        self.treeview_ingresos.column("#0", width=0, stretch="no")
+        self.treeview_ingresos.pack()
+        self.treeview_ingresos.place(x=10, y=120)
+
+        self.label_gastos = tk.Label(self, text="Gastos", font=("Helvetica", 10))
+        self.label_gastos.pack()
+        self.label_gastos.place(x=10, y=350)
+
+        self.treeview_gastos = ttk.Treeview(self, columns=("Cuenta", "Debe", "Haber"))
+        self.treeview_gastos.heading("#0", text="", anchor="w")
+        self.treeview_gastos.heading("Cuenta", text="Cuenta")
+        self.treeview_gastos.heading("Debe", text="Debe")
+        self.treeview_gastos.heading("Haber", text="Haber")
+        self.treeview_gastos.column("#0", width=0, stretch="no")
+        self.treeview_gastos.pack()
+        self.treeview_gastos.place(x=10, y=370)
+
+        self.label_suma_ingresos = tk.Label(self, text="Saldo neto de ingresos", font=("Helvetica", 10))
+        self.label_suma_ingresos.pack()
+        self.label_suma_ingresos.place(x=650, y=100)
+
+        self.entry_suma_ingresos = tk.Entry(self)
+        self.entry_suma_ingresos.pack()
+        self.entry_suma_ingresos.place(x=650, y=120)
+
+        self.label_suma_gastos = tk.Label(self, text="Saldo neto de gastos", font=("Helvetica", 10))
+        self.label_suma_gastos.pack()
+        self.label_suma_gastos.place(x=650, y=250)
+
+        self.entry_suma_gastos = tk.Entry(self)
+        self.entry_suma_gastos.pack()
+        self.entry_suma_gastos.place(x=650, y=270)
+
+        self.label_utilidad = tk.Label(self, text="Utilidad", font=("Helvetica", 10))
+        self.label_utilidad.pack()
+        self.label_utilidad.place(x=650, y=400)
+
+        self.entry_utilidad = tk.Entry(self)
+        self.entry_utilidad.pack()
+        self.entry_utilidad.place(x=650, y=420)
+
+        self.llenar_tablas()
+
+    def llenar_tablas(self):
+        self.treeview_ingresos.delete(*self.treeview_ingresos.get_children())
+        self.treeview_gastos.delete(*self.treeview_gastos.get_children())
+        self.entry_suma_ingresos.delete(0, tk.END)
+        self.entry_suma_gastos.delete(0, tk.END)
+        self.entry_utilidad.delete(0, tk.END)
+
+        fecha_inicio = self.entry_fecha.get()
+        fecha_fin = self.entry_fecha2.get()
+
+        ingresos = self.obtener_ingresos(fecha_inicio, fecha_fin)
+        gastos = self.obtener_gastos(fecha_inicio, fecha_fin)
+
+        suma_ingresos = 0
+        suma_gastos = 0
+        for ingreso in ingresos:
+            self.treeview_ingresos.insert("", tk.END, text="", values=(ingreso[0], ingreso[1], ingreso[2]))
+            suma_ingresos = suma_ingresos + ingreso[1] - ingreso[2]
+        for gasto in gastos:
+            self.treeview_gastos.insert("", tk.END, text="", values=(gasto[0], gasto[1], gasto[2]))
+            suma_gastos = suma_gastos + gasto[1] - gasto[2]
+
+        self.entry_suma_ingresos.insert(0, suma_ingresos)
+        self.entry_suma_gastos.insert(0, suma_gastos)
+        self.entry_utilidad.insert(0, suma_ingresos - suma_gastos)
+
+    def obtener_ingresos(self, fecha_inicio, fecha_fin):
+        mi_socket = crear_socket()
+        consultarIngresos = "CONSULTAR_INGRESOS|COMPROBANTE|"+fecha_inicio+"|"+fecha_fin
+        mi_socket.send(consultarIngresos.encode("utf-8"))
+        self.treeview_ingresos.delete(*self.treeview_ingresos.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        return data_decoded
+    
+    def obtener_gastos(self, fecha_inicio, fecha_fin):
+        mi_socket = crear_socket()
+        consultarIngresos = "CONSULTAR_GASTOS|COMPROBANTE|"+fecha_inicio+"|"+fecha_fin
+        mi_socket.send(consultarIngresos.encode("utf-8"))
+        self.treeview_ingresos.delete(*self.treeview_ingresos.get_children())
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        return data_decoded
+
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
+<<<<<<< HEAD
+ventana = estadoResultados()
+=======
 ventana = VentanaLogin()
+>>>>>>> b89a5c3ea30bf40c45e555f64c9cd4252d9e5eb4
 ventana.mainloop()
