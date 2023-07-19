@@ -263,6 +263,8 @@ class VentanaAgregarEvaluacion(tk.Tk):
         self.treeview_candidato.pack()
         self.treeview_candidato.place(x=10, y=100)
         
+        self.treeview_candidato.bind("<<TreeviewSelect>>", self.rellenar_campos)
+        
         self.label_codigo_pev = tk.Label(self, text="Código PEV:")  
         self.label_codigo_pev.pack()
         self.label_codigo_pev.place(x=10, y=350)
@@ -284,7 +286,7 @@ class VentanaAgregarEvaluacion(tk.Tk):
         self.label_calificacion.place(x=10, y=410)
         self.entry_calificacion.place(x=150, y=410)
         
-        self.btn_guardar_calificacion = tk.Button(self.master, text="Guardar")
+        self.btn_guardar_calificacion = tk.Button(self.master, text="Guardar", command=self.guardar_evaluacion)
         self.btn_guardar_calificacion.pack()
         self.btn_guardar_calificacion.place(x=10, y=440)
         
@@ -299,7 +301,7 @@ class VentanaAgregarEvaluacion(tk.Tk):
         self.treeview_evaluacion.pack()
         self.treeview_evaluacion.place(x=10, y=470)
 
-        self.treeview_evaluacion.bind("<<TreeviewSelect>>")
+        self.treeview_evaluacion.bind("<<TreeviewSelect>>", self.rellenar_campos)
 
         self.btn_regresar = tk.Button(self, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack()
@@ -341,25 +343,42 @@ class VentanaAgregarEvaluacion(tk.Tk):
             self.treeview_evaluacion.insert('', 'end', values=motivo)
         mi_socket.close()
         
+    def rellenar_campos(self, event):
+        selection = self.treeview_candidato.selection()
+        if selection:
+            item = self.treeview_candidato.item(selection)
+            print(item)
+            codigo_pev = item['values'][3]
+            cedula_can = item['values'][0]
+            self.entry_codigo_pev.config(state=tk.NORMAL)
+            self.entry_codigo_pev.insert(0, codigo_pev)
+            self.entry_codigo_pev.config(state=tk.DISABLED)
+            self.entry_can.config(state=tk.NORMAL)
+            self.entry_can.insert(0, cedula_can)
+            self.entry_can.config(state=tk.DISABLED)
+            
+    
     def guardar_evaluacion(self):
-        candidato = self.combo_candidato.get()
-        print(candidato)
-        fecha = self.entry_fecha.get()
+        cedula = self.entry_can.get()
+        codigo = self.entry_codigo_pev.get()
         calificacion = self.entry_calificacion.get()
-        id = sm.generar_id_evaluacion()
-        ingresoParametro = "INGRESAR|EVALUACION|(CEDULA_CAN,CODIGO_PEV,NUMERO_EVA,FECHA_EVA,CALIFICACION_EVA)|"+ str(candidato[0]) + ", " + str(candidato[1]) + ", " + id + ", "+ str(fecha) +", " + str(calificacion)
-        print(ingresoParametro)
+        consulta = "INGRESAR|EVALUACION|(CEDULA_CAN,CODIGO_PEV,NUMERO_EVA,FECHA_EVA,CALIFICACION_EVA)|"+cedula+","+codigo+","+self.label_id.get()+","+self.entry_fecha.get()+","+calificacion
+        print(consulta)
         mi_socket = crear_socket()
-        mi_socket.send(ingresoParametro.encode("utf-8"))
-        respuesta = mi_socket.recv(1024)
-        respuesta = respuesta.decode("utf-8")
-        print(respuesta)
+        mi_socket.send(consulta.encode("utf-8"))
+        result = mi_socket.recv(1024).decode("utf-8")
+        print(result)
         mi_socket.close()
+        self.treeview_evaluacion.delete(*self.treeview_evaluacion.get_children())
+        list = []
+        list.append(cedula)
+        list.append(codigo)
+        list.append(self.label_id.get())
+        list.append(self.entry_fecha.get())
+        list.append(calificacion)
+        for i in list:
+            self.treeview_evaluacion.insert('', 'end', values=i)
         
-        self.combo_candidato.set('')  # Borrar contenido del campo de entrada
-        self.entry_fecha.delete(0, 'end')  
-        self.entry_calificacion.delete(0, 'end')  
-        self.rellenar_tabla()
 
 class VentanaAgregarCandidato(tk.Tk):
     def __init__(self, master=None):

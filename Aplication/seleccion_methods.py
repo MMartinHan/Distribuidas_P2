@@ -16,7 +16,6 @@ def generar_id_parametroEvaluacion():
     if result == "None":
         id = "1"  
     else:
-        result = result[1:-1]
         id = int(result)
         id += 1
         id = str(id)
