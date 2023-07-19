@@ -524,34 +524,52 @@ class VentanaAgregarParametro(tk.Tk):
         super().__init__(master)
         self.title("Pantalla de Parametro de Evaluación")
         self.master = master
-        self.geometry("900x500")
+        self.geometry("900x700")
         self.parametros = []
         self.create_widgets()
         self.rellenar_tabla()
 
     def create_widgets(self):
-        self.label_candidato = tk.Label(self.master, text="Escoja al candidato")
+        self.label_candidato = tk.Label(self.master, text="Escoja al candidato: ")
         self.label_candidato.pack()
+        self.label_candidato.place(x=10, y=10)
         op = self.rellenar_combobox()
         opcion_seleccionada = tk.StringVar()
         self.combo_candidato = ttk.Combobox(self.master, textvariable=opcion_seleccionada, values=op, state="readonly")
         self.combo_candidato.pack()
+        self.combo_candidato.place(x=10, y=30)
         
+        self.label_buscar_parametro = tk.Label(self.master, text="Buscar parametro:")
+        self.label_buscar_parametro.pack()
+        self.label_buscar_parametro.place(x=200, y=10)
+        self.entry_buscar_parametro = tk.Entry(self.master)
+        self.entry_buscar_parametro.pack()
+        self.entry_buscar_parametro.place(x=300, y=10)
+        self.btn_buscar_parametro = tk.Button(self.master, text="Buscar", command=self.buscar_parametro)
+        self.btn_buscar_parametro.pack()
+        self.btn_buscar_parametro.place(x=200, y=30)
+
         self.label_nombre_parametro = tk.Label(self.master, text="Nombre del parámetro:")
         self.label_nombre_parametro.pack()
+        self.label_nombre_parametro.place(x=10, y=60)
         self.entry_nombre_parametro = tk.Entry(self.master)
         self.entry_nombre_parametro.pack()
+        self.entry_nombre_parametro.place(x=10, y=90)
 
         self.label_puntaje_maximo = tk.Label(self.master, text="Puntaje máximo:")
         self.label_puntaje_maximo.pack()
+        self.label_puntaje_maximo.place(x=10, y=110)
         self.entry_puntaje_maximo = tk.Entry(self.master)
         self.entry_puntaje_maximo.pack()
+        self.entry_puntaje_maximo.place(x=10, y=140)
 
         self.btn_guardar_parametro = tk.Button(self.master, text="Guardar", command=self.guardar_parametro)
         self.btn_guardar_parametro.pack()
+        self.btn_guardar_parametro.place(x=10, y=170)
 
         self.label_parametros_guardados = tk.Label(self.master, text="Parámetros Guardados:")
         self.label_parametros_guardados.pack()
+        self.label_parametros_guardados.place(x=10, y=200)
 
         self.treeview_parametros = ttk.Treeview(self.master, columns=("candidato", "codigo", "nombre", "puntaje"), show="headings")
         self.treeview_parametros.heading("candidato", text="Candidato")
@@ -563,17 +581,25 @@ class VentanaAgregarParametro(tk.Tk):
         self.treeview_parametros.column("nombre", anchor=tk.CENTER)
         self.treeview_parametros.column("puntaje", anchor=tk.CENTER)
         self.treeview_parametros.pack()
+        self.treeview_parametros.place(x=10, y=230)
 
         self.btn_modificar = tk.Button(self.master, text="Modificar", state=tk.DISABLED, command=self.modificar_parametro)
         self.btn_modificar.pack(side=tk.LEFT)
+        self.btn_modificar.place(x=10, y=500)
 
         self.btn_eliminar = tk.Button(self.master, text="Eliminar", state=tk.DISABLED, command=self.eliminar_parametro)
         self.btn_eliminar.pack(side=tk.LEFT)
+        self.btn_eliminar.place(x=80, y=500)
+
+        self.btn_resetear = tk.Button(self.master, text="Resetear ventana", command=self.resetear_campos)
+        self.btn_resetear.pack()
+        self.btn_resetear.place(x=150, y=500)
 
         self.treeview_parametros.bind("<<TreeviewSelect>>", self.actualizar_botones)
 
         self.btn_regresar = tk.Button(self.master, text="Regresar", command=self.mover_inicio)
         self.btn_regresar.pack()
+        self.btn_regresar.place(x=225, y=500)
 
     def rellenar_combobox(self):
         opciones = sm.consultar_candidatos()
@@ -655,6 +681,28 @@ class VentanaAgregarParametro(tk.Tk):
             self.entry_puntaje_maximo.delete(0, 'end') 
             self.rellenar_tabla()
               
+    def buscar_parametro(self):
+        codigo = self.entry_buscar_parametro.get()
+        buscarMotivo = "CONSULTAR_PARAMETROEVALUACION_NOMBRE|PARAMETROEVALUACION|"+codigo
+        mi_socket = crear_socket()
+        mi_socket.send(buscarMotivo.encode("utf-8"))
+        data = b''
+        data += mi_socket.recv(1024)
+        data_decoded = pickle.loads(data)
+        print(data_decoded)
+        if len(data_decoded) == 0:
+            messagebox.showinfo("Error", "No se encontró el parametro de evaluacion")
+        else:
+            self.treeview_parametros.delete(*self.treeview_parametros.get_children())
+            self.entry_nombre_parametro.delete(0, 'end')
+            for motivo in data_decoded:
+                self.treeview_parametros.insert('', 'end', values=motivo)
+            
+    def resetear_campos(self):
+        self.entry_nombre_parametro.delete(0, 'end')
+        self.entry_buscar_parametro.delete(0, 'end')
+        self.rellenar_tabla() 
+
     def actualizar_botones(self, event):
         seleccion = self.treeview_parametros.selection()
 

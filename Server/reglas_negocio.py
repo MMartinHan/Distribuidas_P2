@@ -39,3 +39,9 @@ def aportePatronalPagar(sueldo):
 
 def nominaPagar(sueldo):
     return (sueldo+calcular13(sueldo)+calcular14(sueldo)+calcularGastoFondoReserva(sueldo)+calcularAportePatronal(sueldo))-(aportePersonalPagar(sueldo)+aportePatronalPagar(sueldo))
+
+def calificacion_evaluacion(parametroA, parametroB, parametroC):
+    calificacionA = parametroA * 0.3
+    calificacionB = parametroB * 0.4
+    calificacionC = parametroC * 0.3
+    return calificacionA + calificacionB + calificacionC

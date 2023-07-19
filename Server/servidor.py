@@ -142,6 +142,14 @@ while True:
         print(resultado)
         print(type(resultado))
         conexion.send(resultado.encode("utf-8"))
+    elif sql_query[0]=="CONSULTAR_PARAMETROEVALUACION_NOMBRE":
+        print("Consultar parametro de evaluación")
+        sql="SELECT * FROM "+sql_query[1]+" WHERE NOMBRE_PEV='"+sql_query[2]+"'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux) 
     
 
     elif sql_query[0]=="CONSULTAR":
