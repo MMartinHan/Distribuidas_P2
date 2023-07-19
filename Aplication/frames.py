@@ -2767,9 +2767,5 @@ class estadoResultados(tk.Tk):
         return data_decoded
 
 # Crear una instancia de la clase VentanaLogin y ejecutar el bucle principal
-<<<<<<< HEAD
-ventana = VentanaAsiento()
-=======
 ventana = VentanaLogin()
->>>>>>> aa5560b517394f56a5fc1d4d267dc526b9f63889
 ventana.mainloop()
