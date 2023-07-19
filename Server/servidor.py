@@ -188,9 +188,36 @@ while True:
         print(resultadoAux)
         conexion.send(resultadoAux)
     
+    elif sql_query[0]=="CONSULTAR_ESPECIFICO":
+        sql = "SELECT * FROM " + sql_query[1] + " WHERE " + sql_query[2] + " = '" + sql_query[3]+"'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        print(resultado)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    
     elif sql_query[0]=="CONSULTAR_EMPLEADO":
         print("Consultar empleado")
         sql = "SELECT * FROM " + sql_query[1]
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux)
+    
+    elif sql_query[0]=="CONSULTAR_EMPLEADO_CED":
+        print("Consultar empleado")
+        sql="SELECT * FROM "+sql_query[1]+" WHERE CEDULA_EMP='"+sql_query[3]+"'"
+        print(sql)
+        resultado = per.persistencia_2(sql)
+        resultadoAux = pickle.dumps(resultado)
+        print(resultadoAux)
+        conexion.send(resultadoAux) 
+            
+    elif sql_query[0]=="CONSULTAR_REPORTE_COD":
+        print("Consultar reporte")
+        sql="SELECT * FROM "+sql_query[1]+" WHERE CODIGO_NOM='"+sql_query[3]+"'"
         print(sql)
         resultado = per.persistencia_2(sql)
         resultadoAux = pickle.dumps(resultado)
@@ -246,7 +273,7 @@ while True:
         conexion.send(resultadoAux)
      
     elif sql_query[0]=="CONSULTA_REPORTE":
-        sql = "SELECT * FROM " + sql_query[1]
+        sql = "SELECT * FROM " + sql_query[1] + " ORDER BY (CODIGO_NOM)"
         resultado = per.persistencia_2(sql)
         print(resultado)
         resultadoAux = pickle.dumps(resultado)
